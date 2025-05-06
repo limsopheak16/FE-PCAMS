@@ -1,14 +1,13 @@
 import React from 'react'
 import './App.css'
-import Menu from './components/menu'
+// import LoginPage from './pages/loginPage';
+import SidebarMenu from './components/sidebar';
 
-function App() {
-
+export default function App() {
   return (
     <>
-     <Menu />
+      {/* <LoginPage /> */}
+      <SidebarMenu />
     </>
   )
 }
-
-export default App
