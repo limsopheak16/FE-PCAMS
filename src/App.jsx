@@ -1,13 +1,16 @@
 import React from 'react'
 import './App.css'
 // import LoginPage from './pages/loginPage';
-import SidebarMenu from './components/sidebar';
+import PSECampsPage from './pages/campPage'
+import TrackingAttendancePage from'./pages/tracking-attendance'
 
 export default function App() {
   return (
     <>
       {/* <LoginPage /> */}
-      <SidebarMenu />
+      {/* <PSECampsPage /> */}
+      <TrackingAttendancePage />
+    
     </>
   )
 }
