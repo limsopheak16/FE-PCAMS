@@ -12,13 +12,11 @@ export default function App() {
   return (
     <>
       {/* <LoginPage /> */}
-      {/* <PSECampsPage /> */}
-      <TrackingAttendancePage />
-    
-
+      <PSECampsPage />
+      {/* <TrackingAttendancePage /> */}
       {/* <SidebarMenu /> */}
       {/* < DashboardAdmin /> */}
-      <DashboardCoordinator />
+      {/* <DashboardCoordinator /> */}
 
     </>
   )
