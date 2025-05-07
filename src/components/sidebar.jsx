@@ -1,7 +1,7 @@
+// components/sidebar.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/Pse-logo.webp"; // Replace with your image
-
+import logo from "../assets/Pse-logo.webp"; // Your logo image path
 import {
     Calendar,
     Users,
@@ -9,30 +9,30 @@ import {
     Bell,
     User,
     LayoutDashboard,
-} from "lucide-react";
+} from "lucide-react"; // Using lucide-react icons
 
 const SidebarMenu = () => {
     const navigate = useNavigate();
-    const [activeItem, setActiveItem] = useState("Dashboard");
+    const [activeItem, setActiveItem] = useState("Dashboard"); // Default active item
 
     const handleLogout = () => {
         console.log("Logging out...");
-        navigate("/login");
+        navigate("/login"); // Redirect to login page
     };
 
     const menuItems = [
-        { icon: Calendar, label: "Camp" },
-        { icon: Users, label: "Attendance" },
-        { icon: LayoutDashboard, label: "Dashboard" },
-        { icon: User, label: "Add character" },
-        { icon: Bell, label: "Notification" },
+        { icon: Calendar, label: "Camp", route: "/camp" },
+        { icon: Users, label: "Attendance", route: "/attendance" },
+        { icon: LayoutDashboard, label: "Dashboard", route: "/dashboard" },
+        { icon: User, label: "Add Character", route: "/add-character" },
+        { icon: Bell, label: "Notification", route: "/notifications" },
     ];
 
     return (
         <div style={{ border: "1px solid #EDEDED" }} className="w-[272px] h-screen border-r bg-[#EDEDED] flex flex-col shadow-sm">
             {/* Logo */}
-            <div className="flex items-center gap-2 px-5 py-8 ">
-                <div className="w-15 h-15 rounded-full  flex items-center justify-center">
+            <div className="flex items-center gap-2 px-5 py-8">
+                <div className="w-15 h-15 rounded-full flex items-center justify-center">
                     <img
                         src={logo}
                         alt="PCAMS Logo"
@@ -43,7 +43,6 @@ const SidebarMenu = () => {
             </div>
             <hr className="border-[#3D73FA] w-[229px] mx-auto" />
 
-
             {/* Navigation Menu */}
             <nav className="p-5 space-y-10 flex-1">
                 {menuItems.map((item) => {
@@ -51,7 +50,10 @@ const SidebarMenu = () => {
                     return (
                         <div
                             key={item.label}
-                            onClick={() => setActiveItem(item.label)}
+                            onClick={() => {
+                                setActiveItem(item.label);
+                                navigate(item.route); // Navigate to the selected route
+                            }}
                             className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition text-xl ${activeItem === item.label
                                 ? "bg-white text-blue-600"
                                 : "hover:bg-gray-50"
@@ -64,6 +66,8 @@ const SidebarMenu = () => {
                 })}
             </nav>
             <hr className="border-[#3D73FA] w-[229px] mx-auto mt-5" />
+
+            {/* User Profile */}
             <div className="flex items-center gap-3 px-5 py-8">
                 <div className="w-[60px] h-[60px] rounded-full overflow-hidden flex items-center justify-center">
                     <img
@@ -73,13 +77,13 @@ const SidebarMenu = () => {
                     />
                 </div>
                 <div className="flex flex-col">
-                    <span className="font-medium text-base text-lg text-black">Seng Kimer</span>
+                    <span className="font-medium text-lg text-black">Seng Kimer</span>
                     <span className="text-sm text-gray-500">Super Admin</span>
                 </div>
             </div>
 
             {/* Logout Button */}
-            <div className="p-4 ">
+            <div className="p-4">
                 <button
                     onClick={handleLogout}
                     className="w-full flex items-center justify-center gap-2 border border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 py-2 rounded-md"
