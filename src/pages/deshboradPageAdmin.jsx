@@ -15,7 +15,7 @@ import {
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const DashboardAdmin = () => {
-  const [selectedCamp, setSelectedCamp] = useState('');
+  const [, setSelectedCamp] = useState('');
   const [pending, setPending] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -57,7 +57,7 @@ const DashboardAdmin = () => {
         },
       ],
     };
-  }, [chartRef.current]);
+  }, []);
 
   const chartOptions = {
     responsive: true,
