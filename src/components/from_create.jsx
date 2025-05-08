@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import { AiOutlineLeft } from "react-icons/ai";
 
 const Fromadduser = () => {
   const [users, setUsers] = useState([]);
@@ -7,7 +7,7 @@ const Fromadduser = () => {
     khmerName: "",
     englishName: "",
     age: "",
-    position: "",
+    position: "coordinator", // default position
     national: "",
   });
 
@@ -27,78 +27,92 @@ const Fromadduser = () => {
       khmerName: "",
       englishName: "",
       age: "",
-      position: "",
+      position: "coordinator", // reset to default position
+      national: "",
+    });
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      khmerName: "",
+      englishName: "",
+      age: "",
+      position: "coordinator", // reset to default position
       national: "",
     });
   };
 
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
-      {/* Form */}
+    <div className="p-8 bg-gray-100 min-h-screen  flex justify-center items-start">
       <form
         onSubmit={handleCreate}
-        className="bg-white p-6 rounded shadow-md mb-6 max-w-2xl mx-auto"
+        className="bg-white p-16 rounded shadow-md w-full max-w-xl"
       >
-        <h2 className="text-xl font-bold mb-4 text-gray-700 flex items-center gap-2">
-          <FaPlus /> Create New User
-        </h2>
-
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
-            name="khmerName"
-            placeholder="Khmer Name"
-            value={formData.khmerName}
-            onChange={handleChange}
-            required
-            className="p-2 border rounded"
-          />
-          <input
-            type="text"
-            name="englishName"
-            placeholder="English Name"
-            value={formData.englishName}
-            onChange={handleChange}
-            required
-            className="p-2 border rounded"
-          />
-          <input
-            type="number"
-            name="age"
-            placeholder="Age"
-            value={formData.age}
-            onChange={handleChange}
-            required
-            className="p-2 border rounded"
-          />
-          <input
-            type="text"
-            name="position"
-            placeholder="Position"
-            value={formData.position}
-            onChange={handleChange}
-            required
-            className="p-2 border rounded"
-          />
-          <input
-            type="text"
-            name="national"
-            placeholder="National"
-            value={formData.national}
-            onChange={handleChange}
-            required
-            className="p-2 border rounded"
-          />
+        <div className="flex items-center justify-between mb-6">
+          <AiOutlineLeft className="text-xl" />
+          <h2 className="text-2xl font-bold text-gray-700">Add New User</h2>
+          <div style={{ width: 24 }} /> {/* Placeholder for spacing */}
         </div>
 
-        <button
-          type="submit"
-          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Create
-        </button>
+        {/* Input Fields */}
+        <div className="space-y-4">
+          {[
+            { label: "Khmer Name", name: "khmerName" },
+            { label: "English Name", name: "englishName" },
+            { label: "Age", name: "age", type: "number" },
+            { label: "National", name: "national" },
+          ].map(({ label, name, type = "text" }) => (
+            <div key={name}>
+              <label className="block text-lg mb-1">{label}</label>
+              <input
+                type={type}
+                name={name}
+                placeholder={label}
+                value={formData[name]}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded text-gray-600"
+              />
+            </div>
+          ))}
+
+          {/* Position Dropdown */}
+          <div>
+            <label className="block text-lg mb-1">Position</label>
+            <select
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded text-gray-600"
+            >
+              <option value="coordinator">Coordinator</option>
+              <option value="monitor">Monitor</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-6 space-y-4">
+          <div className="w-full">
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition"
+            >
+              Create
+            </button>
+          </div>
+          <div className="w-full">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="w-full bg-gray-300 text-gray-700 py-3 rounded hover:bg-gray-400 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </form>
-     
     </div>
   );
 };
