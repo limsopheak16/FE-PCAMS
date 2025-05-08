@@ -3,8 +3,10 @@ import { Routes, Route } from "react-router-dom";
 import PSECampsPage from "./pages/campPage";
 import DashboardCoordinator from "./pages/dashboradPageCoordinator";
 import TrackingAttendancePage from "./pages/tracking-attendance";
-// import AddCharacterPage from "./pages/addCharacterPage";
 import LoginPage from "./pages/loginPage";
+import DashboardAdmin from './pages/deshboradPageAdmin';
+import Fromadduser from './components/from_create';
+
 
 const App = () => {
   return (
@@ -19,5 +21,6 @@ const App = () => {
     </Routes>
   );
 };
+
 
 export default App;
