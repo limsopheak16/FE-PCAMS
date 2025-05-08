@@ -24,11 +24,12 @@ const SidebarMenu = () => {
     };
 
     const menuItems = [
-        { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
         { icon: Calendar, label: "Camp", path: "/camp" },
         { icon: Users, label: "Attendance", path: "/attendance" },
+        { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
         { icon: User, label: "Add character", path: "/add-character" },
         { icon: Bell, label: "Notification", path: "/notification" },
+
     ];
 
     const toggleSidebar = () => setIsOpen(!isOpen);
