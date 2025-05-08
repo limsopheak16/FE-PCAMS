@@ -12,6 +12,7 @@ import TrackingAttendancePage from'./pages/tracking-attendance'
 // import SidebarMenu from './components/sidebar';
 import DashboardAdmin from './pages/deshboradPageAdmin';
 import DashboardCoordinator from './pages/dashboradPageCoordinator';
+import Fromadduser from './components/from_create';
 
 
 
@@ -20,12 +21,12 @@ export default function App() {
     <>
       {/* <LoginPage /> */}
 
-      <SidebarMenu />
+      {/* <SidebarMenu /> */}
       {/* < DashboardAdmin /> */}
       {/* <DashboardCoordinator /> */}
       {/* < StaffTable /> */}
-
-      <PSECampsPage />
+      <Fromadduser />
+      {/* <PSECampsPage /> */}
       {/* <TrackingAttendancePage /> */}
       {/* <SidebarMenu /> */}
       {/* < DashboardAdmin /> */}
