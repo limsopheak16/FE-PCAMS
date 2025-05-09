@@ -1,11 +1,11 @@
 // components/Layout.jsx
 import React from 'react';
-import Menu from './sidebar';
+import SidebarMenu from "../components/sidebar";
 
 function Layout({ children }) {
   return (
     <>
-      <Menu />
+      <SidebarMenu />
       <div>{children}</div>
     </>
   );
