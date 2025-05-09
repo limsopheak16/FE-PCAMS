@@ -4,18 +4,23 @@ import PSECampsPage from "./pages/campPage";
 import DashboardCoordinator from "./pages/dashboradPageCoordinator";
 import TrackingAttendancePage from "./pages/tracking-attendance";
 import LoginPage from "./pages/loginPage";
-import DashboardAdmin from './pages/deshboradPageAdmin';
-import Fromadduser from './components/from_create';
+import StaffTable from "./pages/createUserPage"
+import DashboardAdmin from "./pages/deshboradPageAdmin"
+import Notification from "./pages/notificationPage";
 
 
 const App = () => {
   return (
     <Routes>
       <Route path="/camp" element={<PSECampsPage />} />
-      <Route path="/dashboard" element={<DashboardCoordinator />} />
       <Route path="/attendance" element={<TrackingAttendancePage />} />
-      {/* <Route path="/add-character" element={<AddCharacterPage />} /> */}
+      <Route path="/dashboard" element={<DashboardCoordinator />} />
+      <Route path="/adduser" element={<StaffTable />} />
+      <Route path="/notification" element={< Notification/>} />
+   
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/admindashboard" element={<DashboardAdmin />} />
+
       {/* Optional: Default route */}
       <Route path="*" element={<PSECampsPage />} />
     </Routes>
