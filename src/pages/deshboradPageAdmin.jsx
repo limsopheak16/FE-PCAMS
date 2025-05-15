@@ -139,10 +139,11 @@ const DashboardAdmin = () => {
           ))}
         </div>
 
-        <div className="p-6 rounded-lg shadow-lg bg-white mb-12">
-          <h2 className="text-xl font-semibold mb-4">Total Attendance</h2>
-          <Line ref={chartRef} data={attendanceChartData} options={chartOptions} />
-        </div>
+        <div className="p-4 rounded-lg shadow bg-white mb-12 h-[585px]">
+  <h2 className="text-lg font-semibold mb-2">Total Attendance</h2>
+  <Line ref={chartRef} data={attendanceChartData} options={{ ...chartOptions, maintainAspectRatio: false }} />
+</div>
+
       </div>
     </div>
   );

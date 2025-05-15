@@ -29,7 +29,7 @@ const StaffTable = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-700">Staff List</h1>
           <button
-            onClick={() => navigate("/Fromadduser")}
+            onClick={() => navigate("/adduser")}
             className="text-[#165FFD] px-4 py-2 rounded hover:bg-gray-400 flex items-center gap-2 border border-[#165FFD]"
           >
             <FaPlus />

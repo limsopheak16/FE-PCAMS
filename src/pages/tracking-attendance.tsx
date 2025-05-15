@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useState } from "react"
-import Sidebar from "../components/sidebar"
+import { useNavigate } from "react-router-dom"
 import { Search, Plus, Calendar } from "lucide-react"
+import Sidebar from "../components/sidebar"
 
 // Types
 interface Student {
@@ -14,7 +15,8 @@ interface Student {
 }
 
 const statusOptions: Student["status"][] = ["Present", "Late", "Absent"]
-// Status dropdown component
+
+// Status Dropdown Component
 interface StatusCellProps {
   status: Student["status"]
   onChange: (status: Student["status"]) => void
@@ -65,7 +67,7 @@ const StatusCell: React.FC<StatusCellProps> = ({ status, onChange }) => {
   )
 }
 
-// Date range picker component
+// Date Range Picker
 interface DateRangePickerProps {
   initialDateRange?: string
   onDateRangeChange?: (range: string) => void
@@ -117,8 +119,10 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   )
 }
 
-// Main Page Component
-const TrackingAttendancePage = () => {
+// Main Component
+const TrackingAttendancePage: React.FC = () => {
+  const navigate = useNavigate()
+
   const [students, setStudents] = useState<Student[]>([
     { id: "21775-1", khmerName: "លីម សុភ័ក្ត្រ", englishName: "Sopheak Lim", age: 19, status: "Present" },
     { id: "21775-2", khmerName: "អេង សុម៉ាលា", englishName: "Somala Eng", age: 18, status: "Late" },
@@ -126,8 +130,8 @@ const TrackingAttendancePage = () => {
     { id: "21775-4", khmerName: "ចាន់ សុវណ្ណា", englishName: "Sovanna Chan", age: 20, status: "Present" },
   ])
 
-  const [dateRange, setDateRange] = useState("05 May, 2025 — 06 May, 2025")
   const [searchQuery, setSearchQuery] = useState("")
+  const [dateRange, setDateRange] = useState("05 May, 2025 — 06 May, 2025")
 
   const handleStatusChange = (index: number, newStatus: Student["status"]) => {
     const updated = [...students]
@@ -136,6 +140,7 @@ const TrackingAttendancePage = () => {
   }
 
   const handleCreateNewChild = () => {
+    navigate("/addchild")
   }
 
   const filteredStudents = students.filter((student) =>

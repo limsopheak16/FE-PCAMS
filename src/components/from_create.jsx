@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import { AiOutlineLeft } from "react-icons/ai";
+import { useNavigate} from "react-router-dom";
+
 
 const Fromadduser = () => {
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     khmerName: "",
     englishName: "",
@@ -15,7 +19,9 @@ const Fromadduser = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
+ const handleBack = () =>{
+  navigate("/user");
+ }
   const handleCreate = (e) => {
     e.preventDefault();
     const newUser = {
@@ -48,8 +54,7 @@ const Fromadduser = () => {
         onSubmit={handleCreate}
         className="bg-white p-16 rounded shadow-md w-full max-w-xl"
       >
-        <div className="flex items-center justify-between mb-6">
-          <AiOutlineLeft className="text-xl" />
+        <div className="flex items-center justify-center mb-6">
           <h2 className="text-2xl font-bold text-gray-700">Add New User</h2>
           <div style={{ width: 24 }} /> {/* Placeholder for spacing */}
         </div>
@@ -109,6 +114,15 @@ const Fromadduser = () => {
               className="w-full bg-gray-300 text-gray-700 py-3 rounded hover:bg-gray-400 transition"
             >
               Cancel
+            </button>
+          </div>
+          <div className="w-full">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="w-full bg-red-600 text-white py-3 rounded hover:bg-red-900 transition"
+            >
+              Back
             </button>
           </div>
         </div>

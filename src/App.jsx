@@ -7,6 +7,9 @@ import LoginPage from "./pages/loginPage";
 import StaffTable from "./pages/createUserPage"
 import DashboardAdmin from "./pages/deshboradPageAdmin"
 import Notification from "./pages/notificationPage";
+import ProfilePage from "./pages/profilePage";
+import CreateChildPage from "./pages/createChildrenPage";
+import Fromadduser from "./components/from_create";
 
 
 const App = () => {
@@ -15,11 +18,14 @@ const App = () => {
       <Route path="/camp" element={<PSECampsPage />} />
       <Route path="/attendance" element={<TrackingAttendancePage />} />
       <Route path="/dashboard" element={<DashboardCoordinator />} />
-      <Route path="/adduser" element={<StaffTable />} />
+      <Route path="/user" element={<StaffTable />} />
       <Route path="/notification" element={< Notification/>} />
-   
+      <Route path="/adduser" element={<Fromadduser />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admindashboard" element={<DashboardAdmin />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/addchild" element={<CreateChildPage />} />
+      
 
       {/* Optional: Default route */}
       <Route path="*" element={<PSECampsPage />} />
