@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 
 export default function CreateChildForm() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     familyId: '',
     khmerName: '',
@@ -19,9 +22,13 @@ export default function CreateChildForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle API call here
     console.log(formData);
+    navigate("/attendance"); 
   };
+  
+   const handleBack = () => {
+    navigate("/attendance")
+   }
 
   return (
     <div className="flex flex-col items-center mt-10">
@@ -94,8 +101,14 @@ export default function CreateChildForm() {
         <button type="submit" className="w-full bg-blue-400 hover:bg-blue-500 text-white py-2 rounded mb-2">
           Create
         </button>
-        <button type="button" className="w-full bg-gray-300 hover:bg-gray-400 text-black py-2 rounded">
+        <button type="button" className="w-full bg-gray-300 hover:bg-gray-400 text-black py-2 rounded mb-2">
           Cancel
+        </button>
+        <button
+          onClick={handleBack} // Go back to the previous page
+          className="w-full bg-red-600 hover:bg-gray-400 text-white py-2 rounded"
+        >
+           Back
         </button>
       </form>
     </div>

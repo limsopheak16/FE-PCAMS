@@ -59,6 +59,13 @@ const CreateCampDialog = ({ open, onOpenChange, onCreateCamp }) => {
             >
               Cancel
             </button>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="w-full py-3 bg-red-600 text-white rounded-md hover:bg-red-800 transition"
+            >
+              Back
+            </button>
           </div>
         </form>
       </div>

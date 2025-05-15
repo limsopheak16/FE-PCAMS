@@ -27,12 +27,18 @@ const SidebarMenu = () => {
     { icon: Calendar, label: "Camp", path: "/camp" },
     { icon: Users, label: "Attendance", path: "/attendance" },
     { icon: LayoutDashboard, label: "Coordinater Dashboard", path: "/dashboard" },
-    { icon: User, label: "Add User", path: "/adduser" },
+    { icon: User, label: "Add User", path: "/user" },
     { icon: Bell, label: "Notification", path: "/notification" },
     { icon: LayoutDashboard, label: "Admin Dashboard", path: "/admindashboard" },
+    // Removed Profile from menuItems
   ];
 
   const toggleSidebar = () => setIsOpen(!isOpen);
+
+  const goToProfile = () => {
+    navigate("/profile");
+    if (window.innerWidth < 768) setIsOpen(false);
+  };
 
   return (
     <>
@@ -86,9 +92,10 @@ const SidebarMenu = () => {
                   if (window.innerWidth < 768) setIsOpen(false);
                 }}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 text-lg
-                  ${isActive
-                    ? "bg-white text-[#165FFD] font-semibold border-l-4 border-[#165FFD] shadow-sm"
-                    : "hover:bg-white hover:text-[#165FFD] text-gray-700"
+                  ${
+                    isActive
+                      ? "bg-white text-[#165FFD] font-semibold border-l-4 border-[#165FFD] shadow-sm"
+                      : "hover:bg-white hover:text-[#165FFD] text-gray-700"
                   }`}
               >
                 <Icon size={20} />
@@ -100,8 +107,11 @@ const SidebarMenu = () => {
 
         <hr className="border-[#3D73FA] w-[229px] mx-auto mt-5" />
 
-        {/* User Info */}
-        <div className="hidden md:flex items-center gap-3 px-5 py-6">
+        {/* User Info - Click to go to profile */}
+        <div
+          className="hidden md:flex items-center gap-3 px-5 py-6 cursor-pointer hover:bg-white transition"
+          onClick={goToProfile}
+        >
           <div className="w-[60px] h-[60px] rounded-full overflow-hidden">
             <img
               src={logo}
