@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import SidebarMenu from "../components/sidebar";
 import CampCard from "../components/campCard";
 import { PlusCircle } from "lucide-react";
-
+import axiosInstance from "../api/axiosInstance";
 const PSECampsPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
@@ -54,7 +54,25 @@ const PSECampsPage = () => {
       alert("Please fill in the camp name and location.");
     }
   };
-
+  useEffect(() => {
+    const fetchCamps = async () => {
+      try {
+        const response = await axiosInstance.get("/camps");
+        setCamps(response.data);
+      } catch (error) {
+        if (error.response?.status === 401) {
+          console.error("Unauthorized. Redirecting to login...");
+          // redirect to login page
+        } else {
+          console.error("Error fetching camps:", error);
+        }
+      }
+    };
+  
+    fetchCamps();
+  }, []);
+  
+  
   return (
     <div className="flex min-h-screen bg-gray-50">
       <SidebarMenu />
