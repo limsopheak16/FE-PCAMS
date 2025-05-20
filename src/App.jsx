@@ -4,12 +4,13 @@ import PSECampsPage from "./pages/campPage";
 import DashboardCoordinator from "./pages/dashboradPageCoordinator";
 import TrackingAttendancePage from "./pages/tracking-attendance";
 import LoginPage from "./pages/loginPage";
-import StaffTable from "./pages/createUserPage"
+// import StaffTable from "./pages/createUserPage" (Removed duplicate import)
 import DashboardAdmin from "./pages/deshboradPageAdmin"
 import Notification from "./pages/notificationPage";
 import ProfilePage from "./pages/profilePage";
 import CreateChildPage from "./pages/createChildrenPage";
-import Fromadduser from "./components/from_create";
+import Fromadduser from "./components/AddUser_form";
+import StaffTable from "./pages/StaffTable";
 
 
 const App = () => {
@@ -25,7 +26,8 @@ const App = () => {
       <Route path="/admindashboard" element={<DashboardAdmin />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/addchild" element={<CreateChildPage />} />
-      
+      <Route path="/staff/:id" element={<div>Staff Details Page (Placeholder)</div>} />
+
 
       {/* Optional: Default route */}
       <Route path="*" element={<PSECampsPage />} />
