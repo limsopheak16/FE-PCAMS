@@ -1,29 +1,29 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import SidebarMenu from "../components/sidebar";
 import CampCard from "../components/campCard";
 import { PlusCircle } from "lucide-react";
 import axiosInstance from "../api/axiosInstance";
+import { useNavigate } from "react-router-dom";
+
+
+
 const PSECampsPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
+  const navigate = useNavigate();
+
   const [camps, setCamps] = useState(
     Array(9).fill({
       title: "Central Camp",
       location: "PSE - Pour un Sourire d'Enfant",
       description: "This is a sample description.",
+      completionDate: "",
     })
   );
 
-  const [formCamp, setFormCamp] = useState({
-    title: "",
-    location: "",
-    description: "",
-  });
 
   const handleCreateNewCamp = () => {
-    setEditingIndex(null);
-    setFormCamp({ title: "", location: "", description: "" });
-    setIsDialogOpen(true);
+    navigate("/addcamp");
   };
 
   const handleCampClick = (index) => {
@@ -47,32 +47,35 @@ const PSECampsPage = () => {
       } else {
         setCamps([...camps, formCamp]);
       }
-      setFormCamp({ title: "", location: "", description: "" });
+      setFormCamp({ title: "", location: "", description: "", completionDate: "" });
       setEditingIndex(null);
       setIsDialogOpen(false);
     } else {
       alert("Please fill in the camp name and location.");
     }
   };
+
   useEffect(() => {
     const fetchCamps = async () => {
       try {
+        const token = localStorage.getItem("token");
+        console.log("Token before request:", token); // Debug token presence
         const response = await axiosInstance.get("/camps");
         setCamps(response.data);
       } catch (error) {
         if (error.response?.status === 401) {
           console.error("Unauthorized. Redirecting to login...");
-          // redirect to login page
+          // Add redirect to login here if needed, e.g.
+          // window.location.href = "/login";
         } else {
           console.error("Error fetching camps:", error);
         }
       }
     };
-  
+
     fetchCamps();
   }, []);
-  
-  
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <SidebarMenu />
@@ -122,83 +125,15 @@ const PSECampsPage = () => {
               camps.map((camp, index) => (
                 <CampCard
                   key={index}
-                  title={camp.title}
+                  title={camp.camp_name}
                   location={camp.location}
                   onClick={() => handleCampClick(index)}
+                  // optionally, pass description or completionDate if CampCard supports
                 />
               ))
             )}
           </div>
-        </div>
-
-        {/* Modal */}
-        {isDialogOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
-            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-lg">
-              <h2 className="text-xl sm:text-2xl font-semibold mb-6 text-center text-gray-900">
-                {editingIndex !== null ? "Edit Camp" : "Create New Camp"}
-              </h2>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-5">
-                  <label className="block font-medium text-sm text-gray-700 mb-2">
-                    Camp Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formCamp.title}
-                    onChange={handleInputChange}
-                    placeholder="Enter camp name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                    required
-                  />
-                </div>
-                <div className="mb-5">
-                  <label className="block font-medium text-sm text-gray-700 mb-2">
-                    Location <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formCamp.location}
-                    onChange={handleInputChange}
-                    placeholder="Enter location"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                    required
-                  />
-                </div>
-                <div className="mb-6">
-                  <label className="block font-medium text-sm text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formCamp.description}
-                    onChange={handleInputChange}
-                    placeholder="Enter description"
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                  />
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-[#4F7CFF] text-white py-3 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md font-medium"
-                  >
-                    {editingIndex !== null ? "Update" : "Create"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsDialogOpen(false)}
-                    className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition-shadow hover:shadow-md font-medium"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        </div>       
       </div>
     </div>
   );

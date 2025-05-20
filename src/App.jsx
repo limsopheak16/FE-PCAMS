@@ -10,22 +10,23 @@ import Notification from "./pages/notificationPage";
 import ProfilePage from "./pages/profilePage";
 import CreateChildPage from "./pages/createChildrenPage";
 import Fromadduser from "./components/from_create";
-
+import CreateCampPage from "./pages/createCampPage";
 
 const App = () => {
   return (
     <Routes>
       <Route path="/camp" element={<PSECampsPage />} />
+      <Route path="/addcamp" element={<CreateCampPage />} />
       <Route path="/attendance" element={<TrackingAttendancePage />} />
       <Route path="/dashboard" element={<DashboardCoordinator />} />
       <Route path="/user" element={<StaffTable />} />
-      <Route path="/notification" element={< Notification/>} />
+      <Route path="/notification" element={< Notification />} />
       <Route path="/adduser" element={<Fromadduser />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admindashboard" element={<DashboardAdmin />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/addchild" element={<CreateChildPage />} />
-      
+
 
       {/* Optional: Default route */}
       <Route path="*" element={<PSECampsPage />} />
