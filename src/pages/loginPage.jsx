@@ -13,29 +13,30 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("handleSubmit triggered");
     setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
-
+  
     try {
-      const response = await axiosInstance.post("/auth/login", {
-        email,
-        password,
-      });
-
+      const response = await axiosInstance.post("/auth/login", { email, password });
+      console.log("Response status:", response.status);
+      console.log("Response data:", response.data.data.token);
+  
       if (response.status === 200) {
         const data = response.data;
         setSuccessMsg("Login successful!");
-      
-        // Store token if returned
-        if (data.token) {
-          localStorage.setItem("token", data.token);
+  
+        if (data.data.token) {
+          localStorage.setItem("token", data.data.token);
+          console.log("Token saved in localStorage:", localStorage.getItem("token"));
+        } else {
+          console.warn("No token found in response data!");
         }
-      
+  
         console.log("Login success:", data);
-        navigate("/dashboard"); 
+        navigate("/dashboard");
       }
-      
     } catch (error) {
       console.error("Login error:", error);
       if (error.response && error.response.data?.message) {
@@ -47,6 +48,7 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen flex">
