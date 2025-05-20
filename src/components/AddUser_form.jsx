@@ -1,34 +1,43 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import addUserAccount from "../api/addUserAccount";
 
 const FormAddUser = () => {
   const navigate = useNavigate();
 
-  const [users, setUsers] = useState([]);
+  // Form data to hold user info
   const [formData, setFormData] = useState({
-    khmerName: "",
-    englishName: "",
-    dateOfBirth: "",
-    position: "coordinator", // default position
-    national: "",
+    role_id: "a1b2c3d4-e5f6-7890-abcd-1234567890ab", // Default role ID (you can change this)
+    khmer_name: "",
+    english_name: "",
+    date_of_birth: "",
+    position: "coordinator", // Default position
+    nationality: "",
+    email: "",
+    password: "",
   });
 
+  // Errors for form validation
   const [errors, setErrors] = useState({
-    khmerName: "",
-    englishName: "",
-    dateOfBirth: "",
+    khmer_name: "",
+    english_name: "",
+    date_of_birth: "",
     position: "",
-    national: "",
+    nationality: "",
+    email: "",
+    password: "",
   });
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
+  // Calculate age from date of birth
   const calculateAge = (dob) => {
-    const today = new Date("2025-05-16"); // Current date: May 16, 2025
+    const today = new Date("2025-05-20"); // Today's date: May 20, 2025
     const birthDate = new Date(dob);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
@@ -38,43 +47,61 @@ const FormAddUser = () => {
     return age;
   };
 
+  // Check if the form is filled correctly
   const validateForm = () => {
     let isValid = true;
     const newErrors = {
-      khmerName: "",
-      englishName: "",
-      dateOfBirth: "",
+      khmer_name: "",
+      english_name: "",
+      date_of_birth: "",
       position: "",
-      national: "",
+      nationality: "",
+      email: "",
+      password: "",
     };
 
-    if (!formData.khmerName.trim()) {
-      newErrors.khmerName = "Khmer Name is required";
+    // Check if fields are empty
+    if (!formData.khmer_name.trim()) {
+      newErrors.khmer_name = "Please enter Khmer Name";
       isValid = false;
     }
-    if (!formData.englishName.trim()) {
-      newErrors.englishName = "English Name is required";
+    if (!formData.english_name.trim()) {
+      newErrors.english_name = "Please enter English Name";
       isValid = false;
     }
-    if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = "Date of Birth is required";
+    if (!formData.date_of_birth) {
+      newErrors.date_of_birth = "Please select Date of Birth";
       isValid = false;
     } else {
-      const age = calculateAge(formData.dateOfBirth);
+      const age = calculateAge(formData.date_of_birth);
       if (age < 18) {
-        newErrors.dateOfBirth = "User must be at least 18 years old";
+        newErrors.date_of_birth = "User must be 18 or older";
         isValid = false;
       } else if (age > 120) {
-        newErrors.dateOfBirth = "Invalid date of birth";
+        newErrors.date_of_birth = "Invalid date of birth";
         isValid = false;
       }
     }
     if (!formData.position) {
-      newErrors.position = "Position is required";
+      newErrors.position = "Please select a Position";
       isValid = false;
     }
-    if (!formData.national.trim()) {
-      newErrors.national = "Nationality is required";
+    if (!formData.nationality.trim()) {
+      newErrors.nationality = "Please enter Nationality";
+      isValid = false;
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = "Please enter Email";
+      isValid = false;
+    } else if (!formData.email.includes("@") || !formData.email.includes(".")) {
+      newErrors.email = "Email must be valid (e.g., user@example.com)";
+      isValid = false;
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = "Please enter Password";
+      isValid = false;
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
       isValid = false;
     }
 
@@ -82,47 +109,35 @@ const FormAddUser = () => {
     return isValid;
   };
 
-  const handleCreate = (e) => {
+  // Handle form submission
+  const handleCreate = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      const newUser = {
-        id: users.length + 1,
-        ...formData,
-        age: calculateAge(formData.dateOfBirth), // Add calculated age to user data
-      };
-      setUsers([...users, newUser]);
-      setFormData({
-        khmerName: "",
-        englishName: "",
-        dateOfBirth: "",
-        position: "coordinator",
-        national: "",
-      });
-      setErrors({
-        khmerName: "",
-        englishName: "",
-        dateOfBirth: "",
-        position: "",
-        national: "",
-      });
-      navigate("/user");
+      // Send the form data to the API
+      await addUserAccount(formData, navigate);
     }
   };
 
+  // Clear the form when clicking Cancel
   const handleCancel = () => {
     setFormData({
-      khmerName: "",
-      englishName: "",
-      dateOfBirth: "",
+      role_id: "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+      khmer_name: "",
+      english_name: "",
+      date_of_birth: "",
       position: "coordinator",
-      national: "",
+      nationality: "",
+      email: "",
+      password: "",
     });
     setErrors({
-      khmerName: "",
-      englishName: "",
-      dateOfBirth: "",
+      khmer_name: "",
+      english_name: "",
+      date_of_birth: "",
       position: "",
-      national: "",
+      nationality: "",
+      email: "",
+      password: "",
     });
   };
 
@@ -161,65 +176,65 @@ const FormAddUser = () => {
           >
             {/* Khmer Name */}
             <div className="mb-5">
-              <label htmlFor="khmerName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="khmer_name" className="block text-sm font-medium text-gray-700 mb-2">
                 Khmer Name <span className="text-red-500">*</span>
               </label>
               <input
-                id="khmerName"
+                id="khmer_name"
                 type="text"
-                name="khmerName"
+                name="khmer_name"
                 placeholder="Enter Khmer Name"
-                value={formData.khmerName}
+                value={formData.khmer_name}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
                 aria-required="true"
               />
-              {errors.khmerName && (
-                <p className="text-red-500 text-xs mt-1">{errors.khmerName}</p>
+              {errors.khmer_name && (
+                <p className="text-red-500 text-xs mt-1">{errors.khmer_name}</p>
               )}
             </div>
 
             {/* English Name */}
             <div className="mb-5">
-              <label htmlFor="englishName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="english_name" className="block text-sm font-medium text-gray-700 mb-2">
                 English Name <span className="text-red-500">*</span>
               </label>
               <input
-                id="englishName"
+                id="english_name"
                 type="text"
-                name="englishName"
+                name="english_name"
                 placeholder="Enter English Name"
-                value={formData.englishName}
+                value={formData.english_name}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
                 aria-required="true"
               />
-              {errors.englishName && (
-                <p className="text-red-500 text-xs mt-1">{errors.englishName}</p>
+              {errors.english_name && (
+                <p className="text-red-500 text-xs mt-1">{errors.english_name}</p>
               )}
             </div>
 
             {/* Date of Birth */}
             <div className="mb-5">
-              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 mb-2">
                 Date of Birth <span className="text-red-500">*</span>
               </label>
               <input
-                id="dateOfBirth"
+                id="date_of_birth"
                 type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
+                name="date_of_birth"
+                value={formData.date_of_birth}
                 onChange={handleChange}
-                max="2025-05-16" // Current date: May 16, 2025
+                max="2025-05-20" // Today's date: May 20, 2025
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
                 aria-required="true"
               />
-              {errors.dateOfBirth && (
-                <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>
+              {errors.date_of_birth && (
+                <p className="text-red-500 text-xs mt-1">{errors.date_of_birth}</p>
               )}
-              {formData.dateOfBirth && (
+              {formData.date_of_birth && (
                 <p className="text-gray-500 text-xs mt-1">
-                  Age: {calculateAge(formData.dateOfBirth)}
+                  Age: {calculateAge(formData.date_of_birth)}
                 </p>
               )}
             </div>
@@ -245,23 +260,63 @@ const FormAddUser = () => {
               )}
             </div>
 
-            {/* National */}
+            {/* Nationality */}
             <div className="mb-6">
-              <label htmlFor="national" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="nationality" className="block text-sm font-medium text-gray-700 mb-2">
                 Nationality <span className="text-red-500">*</span>
               </label>
               <input
-                id="national"
+                id="nationality"
                 type="text"
-                name="national"
+                name="nationality"
                 placeholder="Enter Nationality"
-                value={formData.national}
+                value={formData.nationality}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
                 aria-required="true"
               />
-              {errors.national && (
-                <p className="text-red-500 text-xs mt-1">{errors.national}</p>
+              {errors.nationality && (
+                <p className="text-red-500 text-xs mt-1">{errors.nationality}</p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div className="mb-5">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="Enter Email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
+                aria-required="true"
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="mb-5">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Enter Password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
+                aria-required="true"
+              />
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
               )}
             </div>
 
