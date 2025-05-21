@@ -35,7 +35,7 @@ const LoginPage = () => {
         }
   
         console.log("Login success:", data);
-        navigate("/dashboard");
+        navigate("/camp");
       }
     } catch (error) {
       console.error("Login error:", error);
