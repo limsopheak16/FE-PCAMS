@@ -4,43 +4,113 @@ import PSECampsPage from "./pages/campPage";
 import DashboardCoordinator from "./pages/dashboradPageCoordinator";
 import TrackingAttendancePage from "./pages/tracking-attendance";
 import LoginPage from "./pages/loginPage";
-// import StaffTable from "./pages/createUserPage" (Removed duplicate import)
-import DashboardAdmin from "./pages/deshboradPageAdmin"
+import DashboardAdmin from "./pages/deshboradPageAdmin";
 import Notification from "./pages/notificationPage";
 import ProfilePage from "./pages/profilePage";
 import CreateChildPage from "./pages/createChildrenPage";
-
-import Fromadduser from "./components/from_create";
 import CreateCampPage from "./pages/createCampPage";
-
 import Fromadduser from "./components/AddUser_form";
 import StaffTable from "./pages/StaffTable";
-
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   return (
     <Routes>
-      <Route path="/camp" element={<PSECampsPage />} />
-      <Route path="/addcamp" element={<CreateCampPage />} />
-      <Route path="/attendance" element={<TrackingAttendancePage />} />
-      <Route path="/dashboard" element={<DashboardCoordinator />} />
-      <Route path="/user" element={<StaffTable />} />
-      <Route path="/notification" element={< Notification />} />
-      <Route path="/adduser" element={<Fromadduser />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/admindashboard" element={<DashboardAdmin />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/addchild" element={<CreateChildPage />} />
 
-      <Route path="/staff/:id" element={<div>Staff Details Page (Placeholder)</div>} />
+      <Route
+        path="/camp"
+        element={
+          <ProtectedRoute>
+            <PSECampsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/addcamp"
+        element={
+          <ProtectedRoute>
+            <CreateCampPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/attendance"
+        element={
+          <ProtectedRoute>
+            <TrackingAttendancePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardCoordinator />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user"
+        element={
+          <ProtectedRoute>
+            <StaffTable />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notification"
+        element={
+          <ProtectedRoute>
+            <Notification />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/adduser"
+        element={
+          <ProtectedRoute>
+            <Fromadduser />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admindashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardAdmin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/addchild"
+        element={
+          <ProtectedRoute>
+            <CreateChildPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/:id"
+        element={
+          <ProtectedRoute>
+            <div>Staff Details Page (Placeholder)</div>
+          </ProtectedRoute>
+        }
+      />
 
-
-
-      {/* Optional: Default route */}
-      <Route path="*" element={<PSECampsPage />} />
+      {/* Default route goes to login if no token */}
+      <Route path="*" element={<LoginPage />} />
     </Routes>
   );
 };
-
 
 export default App;

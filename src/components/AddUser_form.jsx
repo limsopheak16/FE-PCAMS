@@ -7,7 +7,6 @@ const FormAddUser = () => {
 
   // Form data to hold user info
   const [formData, setFormData] = useState({
-    role_id: "a1b2c3d4-e5f6-7890-abcd-1234567890ab", // Default role ID (you can change this)
     khmer_name: "",
     english_name: "",
     date_of_birth: "",
@@ -15,6 +14,7 @@ const FormAddUser = () => {
     nationality: "",
     email: "",
     password: "",
+    camp_user: "",
   });
 
   // Errors for form validation
@@ -26,6 +26,7 @@ const FormAddUser = () => {
     nationality: "",
     email: "",
     password: "",
+    camp_user: "",
   });
 
   // Handle input changes
@@ -41,7 +42,10 @@ const FormAddUser = () => {
     const birthDate = new Date(dob);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
     return age;
@@ -58,6 +62,7 @@ const FormAddUser = () => {
       nationality: "",
       email: "",
       password: "",
+      camp_user: "",
     };
 
     // Check if fields are empty
@@ -129,6 +134,7 @@ const FormAddUser = () => {
       nationality: "",
       email: "",
       password: "",
+      camp_user: "",
     });
     setErrors({
       khmer_name: "",
@@ -138,6 +144,7 @@ const FormAddUser = () => {
       nationality: "",
       email: "",
       password: "",
+      camp_user: "",
     });
   };
 
@@ -176,7 +183,10 @@ const FormAddUser = () => {
           >
             {/* Khmer Name */}
             <div className="mb-5">
-              <label htmlFor="khmer_name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="khmer_name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Khmer Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -196,7 +206,10 @@ const FormAddUser = () => {
 
             {/* English Name */}
             <div className="mb-5">
-              <label htmlFor="english_name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="english_name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 English Name <span className="text-red-500">*</span>
               </label>
               <input
@@ -210,13 +223,18 @@ const FormAddUser = () => {
                 aria-required="true"
               />
               {errors.english_name && (
-                <p className="text-red-500 text-xs mt-1">{errors.english_name}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.english_name}
+                </p>
               )}
             </div>
 
             {/* Date of Birth */}
             <div className="mb-5">
-              <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="date_of_birth"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Date of Birth <span className="text-red-500">*</span>
               </label>
               <input
@@ -230,7 +248,9 @@ const FormAddUser = () => {
                 aria-required="true"
               />
               {errors.date_of_birth && (
-                <p className="text-red-500 text-xs mt-1">{errors.date_of_birth}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.date_of_birth}
+                </p>
               )}
               {formData.date_of_birth && (
                 <p className="text-gray-500 text-xs mt-1">
@@ -241,7 +261,10 @@ const FormAddUser = () => {
 
             {/* Position */}
             <div className="mb-5">
-              <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="position"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Position <span className="text-red-500">*</span>
               </label>
               <select
@@ -262,7 +285,10 @@ const FormAddUser = () => {
 
             {/* Nationality */}
             <div className="mb-6">
-              <label htmlFor="nationality" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="nationality"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Nationality <span className="text-red-500">*</span>
               </label>
               <input
@@ -276,13 +302,18 @@ const FormAddUser = () => {
                 aria-required="true"
               />
               {errors.nationality && (
-                <p className="text-red-500 text-xs mt-1">{errors.nationality}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.nationality}
+                </p>
               )}
             </div>
 
             {/* Email */}
             <div className="mb-5">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email <span className="text-red-500">*</span>
               </label>
               <input
@@ -302,7 +333,10 @@ const FormAddUser = () => {
 
             {/* Password */}
             <div className="mb-5">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Password <span className="text-red-500">*</span>
               </label>
               <input
@@ -317,6 +351,33 @@ const FormAddUser = () => {
               />
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
+            </div>
+            {/* Camp User */}
+            <div className="mb-5">
+              <label
+                htmlFor="position"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Camp User <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="camp_user"
+                name="camp_user"
+                value={formData.position}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
+                aria-required="true"
+              >
+                <option value="Select Camp">Select Camp</option>
+                <option value="Specail Camp">Specail Camp</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+              </select>
+              {errors.position && (
+                <p className="text-red-500 text-xs mt-1">{errors.position}</p>
               )}
             </div>
 
