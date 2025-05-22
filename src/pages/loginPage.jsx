@@ -30,9 +30,14 @@ const LoginPage = () => {
         if (data.data.token) {
           localStorage.setItem("token", data.data.token);
           console.log("Token saved in localStorage:", localStorage.getItem("token"));
+        
+          // ✅ Save userId here
+          localStorage.setItem("userId", data.data.user.id); // <-- Make sure this path is correct
+          console.log("User ID saved in localStorage:", localStorage.getItem("userId"));
         } else {
           console.warn("No token found in response data!");
         }
+        
   
         console.log("Login success:", data);
         navigate("/camp");

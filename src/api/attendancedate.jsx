@@ -17,7 +17,7 @@ export const fetchAttendanceData = async ({ selectedCamp, startDate, endDate, se
         },
       });
   
-      console.log({ selectedCamp, startDate, endDate }, "API request params");
+      console.log( res.data.attendance, "API request params");
       return res.data;
     } catch (err) {
       console.error("Error fetching attendance data:", err);

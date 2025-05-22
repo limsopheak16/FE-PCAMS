@@ -1,18 +1,19 @@
 import axiosInstance from "../api/axiosInstance";
 
-export const getGroup = async () => {
+export const getUsers = async () => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await axiosInstance.get("/attendance/summary", {
+    const response = await axiosInstance.get("/users", {
       headers: {
         Authorization: `Bearer ${token}`, 
       },
     });
-    console.log("group",response.data)
-    return response.data; 
+    console.log("user",response.data)
+    return response.data;
+   
   } catch (error) {
-    console.error("Error fetching group:", error);
+    console.error("Error fetching Users:", error);
     return null;
   }
 };
