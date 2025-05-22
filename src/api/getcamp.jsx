@@ -1,6 +1,6 @@
 import axiosInstance from "../api/axiosInstance";
 
-export const getcamp = async () => {
+export const getCamps = async () => {
   try {
     const token = localStorage.getItem("token");
 
@@ -9,9 +9,7 @@ export const getcamp = async () => {
         Authorization: `Bearer ${token}`, 
       },
     });
-    console.log("camp",response.data)
     return response.data;
-   
   } catch (error) {
     console.error("Error fetching camp:", error);
     return null;

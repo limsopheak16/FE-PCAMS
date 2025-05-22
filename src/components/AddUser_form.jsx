@@ -1,100 +1,44 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import addUserAccount from "../api/addUserAccount";
+import { createUser } from "../api/createUser"; // Updated import name
 
 const FormAddUser = () => {
   const navigate = useNavigate();
 
-  // Form data to hold user info
   const [formData, setFormData] = useState({
-    khmer_name: "",
-    english_name: "",
-    date_of_birth: "",
-    position: "coordinator", // Default position
-    nationality: "",
+    username: "",
     email: "",
     password: "",
-    camp_user: "",
+    role: "",
   });
 
-  // Errors for form validation
   const [errors, setErrors] = useState({
-    khmer_name: "",
-    english_name: "",
-    date_of_birth: "",
-    position: "",
-    nationality: "",
+    username: "",
     email: "",
     password: "",
-    camp_user: "",
+    role: "",
   });
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Calculate age from date of birth
-  const calculateAge = (dob) => {
-    const today = new Date("2025-05-20"); // Today's date: May 20, 2025
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  };
-
-  // Check if the form is filled correctly
   const validateForm = () => {
     let isValid = true;
     const newErrors = {
-      khmer_name: "",
-      english_name: "",
-      date_of_birth: "",
-      position: "",
-      nationality: "",
+      username: "",
       email: "",
       password: "",
-      camp_user: "",
+      role: "",
     };
 
-    // Check if fields are empty
-    if (!formData.khmer_name.trim()) {
-      newErrors.khmer_name = "Please enter Khmer Name";
+    if (!formData.username.trim()) {
+      newErrors.username = "Please enter Username";
       isValid = false;
     }
-    if (!formData.english_name.trim()) {
-      newErrors.english_name = "Please enter English Name";
-      isValid = false;
-    }
-    if (!formData.date_of_birth) {
-      newErrors.date_of_birth = "Please select Date of Birth";
-      isValid = false;
-    } else {
-      const age = calculateAge(formData.date_of_birth);
-      if (age < 18) {
-        newErrors.date_of_birth = "User must be 18 or older";
-        isValid = false;
-      } else if (age > 120) {
-        newErrors.date_of_birth = "Invalid date of birth";
-        isValid = false;
-      }
-    }
-    if (!formData.position) {
-      newErrors.position = "Please select a Position";
-      isValid = false;
-    }
-    if (!formData.nationality.trim()) {
-      newErrors.nationality = "Please enter Nationality";
-      isValid = false;
-    }
+
     if (!formData.email.trim()) {
       newErrors.email = "Please enter Email";
       isValid = false;
@@ -102,6 +46,7 @@ const FormAddUser = () => {
       newErrors.email = "Email must be valid (e.g., user@example.com)";
       isValid = false;
     }
+
     if (!formData.password.trim()) {
       newErrors.password = "Please enter Password";
       isValid = false;
@@ -110,205 +55,96 @@ const FormAddUser = () => {
       isValid = false;
     }
 
+    if (!formData.role) {
+      newErrors.role = "Please select a Role";
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
 
-  // Handle form submission
   const handleCreate = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      // Send the form data to the API
-      await addUserAccount(formData, navigate);
+      try {
+        await createUser(formData, navigate);
+      } catch (error) {
+        setErrors((prev) => ({
+          ...prev,
+          email: error.response?.data?.message || "Failed to create user",
+        }));
+      }
     }
   };
 
-  // Clear the form when clicking Cancel
   const handleCancel = () => {
     setFormData({
-      role_id: "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
-      khmer_name: "",
-      english_name: "",
-      date_of_birth: "",
-      position: "coordinator",
-      nationality: "",
+      username: "",
       email: "",
       password: "",
-      camp_user: "",
+      role: "",
     });
     setErrors({
-      khmer_name: "",
-      english_name: "",
-      date_of_birth: "",
-      position: "",
-      nationality: "",
+      username: "",
       email: "",
       password: "",
-      camp_user: "",
+      role: "",
     });
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Desktop Header */}
       <header className="hidden md:flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900">Add New User</h1>
         <button
           onClick={() => navigate("/user")}
           className="text-[#4F7CFF] hover:underline font-medium"
-          aria-label="Go back to staff list"
+          aria-label="Go back to user list"
         >
           Back
         </button>
       </header>
 
-      {/* Mobile Header */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white shadow-md">
         <h1 className="text-xl font-bold text-gray-900">Add New User</h1>
         <button
           onClick={() => navigate("/user")}
           className="text-[#4F7CFF] hover:underline text-sm"
-          aria-label="Go back to staff list"
+          aria-label="Go back to user list"
         >
           Back
         </button>
       </header>
 
-      {/* Main Content */}
       <main className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12">
         <div className="max-w-md mx-auto">
           <form
             onSubmit={handleCreate}
             className="w-full p-6 bg-white border border-gray-200 rounded-xl shadow-md"
           >
-            {/* Khmer Name */}
             <div className="mb-5">
               <label
-                htmlFor="khmer_name"
+                htmlFor="username"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Khmer Name <span className="text-red-500">*</span>
+                Username <span className="text-red-500">*</span>
               </label>
               <input
-                id="khmer_name"
+                id="username"
                 type="text"
-                name="khmer_name"
-                placeholder="Enter Khmer Name"
-                value={formData.khmer_name}
+                name="username"
+                placeholder="Enter username"
+                value={formData.username}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
                 aria-required="true"
               />
-              {errors.khmer_name && (
-                <p className="text-red-500 text-xs mt-1">{errors.khmer_name}</p>
+              {errors.username && (
+                <p className="text-red-500 text-xs mt-1">{errors.username}</p>
               )}
             </div>
 
-            {/* English Name */}
-            <div className="mb-5">
-              <label
-                htmlFor="english_name"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                English Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="english_name"
-                type="text"
-                name="english_name"
-                placeholder="Enter English Name"
-                value={formData.english_name}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                aria-required="true"
-              />
-              {errors.english_name && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.english_name}
-                </p>
-              )}
-            </div>
-
-            {/* Date of Birth */}
-            <div className="mb-5">
-              <label
-                htmlFor="date_of_birth"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Date of Birth <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="date_of_birth"
-                type="date"
-                name="date_of_birth"
-                value={formData.date_of_birth}
-                onChange={handleChange}
-                max="2025-05-20" // Today's date: May 20, 2025
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                aria-required="true"
-              />
-              {errors.date_of_birth && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.date_of_birth}
-                </p>
-              )}
-              {formData.date_of_birth && (
-                <p className="text-gray-500 text-xs mt-1">
-                  Age: {calculateAge(formData.date_of_birth)}
-                </p>
-              )}
-            </div>
-
-            {/* Position */}
-            <div className="mb-5">
-              <label
-                htmlFor="position"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Position <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="position"
-                name="position"
-                value={formData.position}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                aria-required="true"
-              >
-                <option value="coordinator">Coordinator</option>
-                <option value="monitor">Monitor</option>
-              </select>
-              {errors.position && (
-                <p className="text-red-500 text-xs mt-1">{errors.position}</p>
-              )}
-            </div>
-
-            {/* Nationality */}
-            <div className="mb-6">
-              <label
-                htmlFor="nationality"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Nationality <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="nationality"
-                type="text"
-                name="nationality"
-                placeholder="Enter Nationality"
-                value={formData.nationality}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                aria-required="true"
-              />
-              {errors.nationality && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.nationality}
-                </p>
-              )}
-            </div>
-
-            {/* Email */}
             <div className="mb-5">
               <label
                 htmlFor="email"
@@ -331,7 +167,6 @@ const FormAddUser = () => {
               )}
             </div>
 
-            {/* Password */}
             <div className="mb-5">
               <label
                 htmlFor="password"
@@ -353,35 +188,31 @@ const FormAddUser = () => {
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
               )}
             </div>
-            {/* Camp User */}
+
             <div className="mb-5">
               <label
-                htmlFor="position"
+                htmlFor="role"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Camp User <span className="text-red-500">*</span>
+                Role <span className="text-red-500">*</span>
               </label>
               <select
-                id="camp_user"
-                name="camp_user"
-                value={formData.position}
+                id="role"
+                name="role"
+                value={formData.role}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
                 aria-required="true"
               >
-                <option value="Select Camp">Select Camp</option>
-                <option value="Specail Camp">Specail Camp</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
+                <option value="">Select Role</option>
+                <option value="coordinator">Coordinator</option>
+                <option value="monitor">Monitor</option>
               </select>
-              {errors.position && (
-                <p className="text-red-500 text-xs mt-1">{errors.position}</p>
+              {errors.role && (
+                <p className="text-red-500 text-xs mt-1">{errors.role}</p>
               )}
             </div>
 
-            {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"

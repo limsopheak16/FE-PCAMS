@@ -1,139 +1,128 @@
-import React, { useState, useEffect } from "react";
-import SidebarMenu from "../components/sidebar";
-import CampCard from "../components/campCard";
+import React, { useEffect, useState } from "react";
 import { PlusCircle } from "lucide-react";
-import axiosInstance from "../api/axiosInstance";
 import { useNavigate } from "react-router-dom";
-
-
+import { toast } from "react-toastify";
+import SidebarMenu from "../components/sidebar";
+import { getCamps } from "../api/getcamp";
 
 const PSECampsPage = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
   const navigate = useNavigate();
-
-  const [camps, setCamps] = useState(
-    Array(9).fill({
-      title: "Central Camp",
-      location: "PSE - Pour un Sourire d'Enfant",
-      description: "This is a sample description.",
-      completionDate: "",
-    })
-  );
-
-
-  const handleCreateNewCamp = () => {
-    navigate("/addcamp");
-  };
-
-  const handleCampClick = (index) => {
-    setEditingIndex(index);
-    setFormCamp(camps[index]);
-    setIsDialogOpen(true);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormCamp((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (formCamp.title && formCamp.location) {
-      if (editingIndex !== null) {
-        const updatedCamps = [...camps];
-        updatedCamps[editingIndex] = formCamp;
-        setCamps(updatedCamps);
-      } else {
-        setCamps([...camps, formCamp]);
-      }
-      setFormCamp({ title: "", location: "", description: "", completionDate: "" });
-      setEditingIndex(null);
-      setIsDialogOpen(false);
-    } else {
-      alert("Please fill in the camp name and location.");
-    }
-  };
+  const [camps, setCamps] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCamps = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        console.log("Token before request:", token); // Debug token presence
-        const response = await axiosInstance.get("/camps");
-        setCamps(response.data);
-      } catch (error) {
-        if (error.response?.status === 401) {
-          console.error("Unauthorized. Redirecting to login...");
-          // Add redirect to login here if needed, e.g.
-          // window.location.href = "/login";
-        } else {
-          console.error("Error fetching camps:", error);
-        }
+      const data = await getCamps();
+      if (data) {
+        setCamps(data);
+      } else {
+        toast.error("Failed to fetch camp data.");
       }
+      setLoading(false);
     };
 
     fetchCamps();
   }, []);
 
+  const handleRowClick = (campId) => {
+    navigate(`/camp/${campId}`);
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <SidebarMenu />
-
-      {/* Main Content Wrapper */}
-      <div className="flex-1 md:ml-[272px]">
-        {/* Desktop Header */}
-        <header className="hidden md:flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
-          <h1 className="text-2xl font-bold text-gray-900">PSE Camps</h1>
+      <div className="flex-1 md:ml-[250px]">
+        {/* Unified Header */}
+        <header className="flex items-center justify-between px-4 py-3 bg-white shadow-md md:px-5 md:py-3">
+          <h1 className="text-lg font-bold text-gray-900 md:text-xl">PSE Camps</h1>
           <button
-            onClick={handleCreateNewCamp}
-            className="inline-flex items-center gap-2 bg-[#4F7CFF] text-white font-medium rounded-lg px-4 py-2 hover:bg-[#3B65E6] transition-shadow hover:shadow-md"
+            onClick={() => navigate("/addcamp")}
+            className="flex items-center gap-2 bg-[#4F7CFF] text-white px-4 py-2 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-sm md:text-base md:px-5 md:py-2.5"
+            aria-label="Create a new camp"
           >
             <PlusCircle className="w-5 h-5" />
-            Create New Camp
-          </button>
-        </header>
-
-        {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white shadow-md">
-          <h1 className="text-xl font-bold text-gray-900">PSE Camps</h1>
-          <button
-            onClick={handleCreateNewCamp}
-            className="inline-flex items-center gap-2 text-[#4F7CFF] font-medium border border-[#4F7CFF] rounded-lg px-3 py-1 hover:bg-blue-50 transition"
-          >
-            <PlusCircle className="w-5 h-5" />
-            <span className="text-sm">Create</span>
+            <span>Create Camp</span>
           </button>
         </header>
 
         {/* Main Content */}
-        <div className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12">
-          {/* Camps Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {camps.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-500 text-lg">No camps available.</p>
-                <button
-                  onClick={handleCreateNewCamp}
-                  className="mt-4 inline-flex items-center gap-2 text-[#4F7CFF] font-medium underline hover:text-[#3B65E6]"
-                >
-                  <PlusCircle className="w-5 h-5" />
-                  Create your first camp
-                </button>
-              </div>
-            ) : (
-              camps.map((camp, index) => (
-                <CampCard
-                  key={index}
-                  title={camp.camp_name}
-                  location={camp.location}
-                  onClick={() => handleCampClick(index)}
-                  // optionally, pass description or completionDate if CampCard supports
-                />
-              ))
-            )}
+        <main className="p-4 sm:p-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Create Camp Button (Mobile) */}
+            <div className="md:hidden mb-4">
+              <button
+                onClick={() => navigate("/addcamp")}
+                className="w-full flex items-center justify-center gap-2 bg-[#4F7CFF] text-white px-4 py-3 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-base"
+              >
+                <PlusCircle className="w-5 h-5" />
+                <span>Create Camp</span>
+              </button>
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Location</th>
+
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={4} className="text-center text-gray-500 py-8 text-sm md:text-base">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : camps.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="text-center text-gray-500 py-8 text-sm md:text-base">
+                        No camps found.
+                      </td>
+                    </tr>
+                  ) : (
+                    camps.map((camp) => (
+                      <tr
+                        key={camp.id}
+                        onClick={() => handleRowClick(camp.id)}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
+                        <td className="px-6 py-4 text-sm text-gray-900">{camp.camp_name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{camp.camp_location}</td>
+                    
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden grid grid-cols-1 gap-4">
+              {loading ? (
+                <div className="text-center text-gray-500 py-8 text-sm">Loading...</div>
+              ) : camps.length === 0 ? (
+                <div className="text-center text-gray-500 py-8 text-sm">No camps found.</div>
+              ) : (
+                camps.map((camp) => (
+                  <div
+                    key={camp.id}
+                    onClick={() => handleRowClick(camp.id)}
+                    className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition cursor-pointer"
+                  >
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 truncate">{camp.camp_name}</h3>
+                      <p className="text-xs text-gray-500 mt-1">Location: {camp.camp_location}</p>
+                    
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>       
+        </main>
       </div>
     </div>
   );
