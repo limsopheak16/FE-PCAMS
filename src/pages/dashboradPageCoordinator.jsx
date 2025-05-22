@@ -1,27 +1,55 @@
 import React, { useState, useEffect } from "react";
 import SidebarMenu from "../components/sidebar";
+import { fetchAttendanceData } from "../api/getforcoordinator";
+// import { getChildrenPresent } from "../api/getChildPresent";
+// import { getChildrenAbsent } from "../api/getChildAbsent";
+// import { getGroup } from "../api/getgroup";
 
 const DashboardCoordinator = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [attendance, setAttendance] = useState({});
+  const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    if (!startDate) setStartDate(today);
-    if (!endDate || endDate < startDate) setEndDate(today);
-  }, [startDate, endDate]);
 
-  const stats = {
-    present_children: 38,
-    present_monitors: 5,
-    absent_children: 2,
-    absent_monitors: 1,
+  const validateDates = (start, end) => {
+    return new Date(start) <= new Date(end);
   };
 
-  const groups = [
-    { groupName: "Group A", children: 20, present: 18, absent: 2 },
-    { groupName: "Group B", children: 22, present: 20, absent: 2 },
-  ];
+  // Initialize default dates
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setStartDate(today);
+    setEndDate(today);
+  }, []);
+
+  // Fetch attendance data when dates change
+  useEffect(() => {
+    const valid = validateDates(startDate, endDate);
+
+    if (startDate && endDate && valid) {
+      const fetchData = async () => {
+        try {
+          const data = await fetchAttendanceData({
+            startDate,
+            endDate,
+            setPending,
+          });
+
+          if (data) {
+            setAttendance(data);
+            console.log("Fetched attendance:", data);
+          }
+        } catch (error) {
+          console.error("Error fetching attendance data:", error);
+        }
+      };
+
+      fetchData();
+    }
+  }, [startDate, endDate]);
+  
+
 
   const cardStyle =
     "border border-gray-200 rounded-lg shadow-md p-4 sm:p-6 text-center bg-white hover:shadow-lg transition-shadow duration-300";
@@ -72,33 +100,29 @@ const DashboardCoordinator = () => {
             {/* Stats Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
               <div className={cardStyle}>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600">
+                {attendance.totalChildren}
+                </p>
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900">Total Children</h2>
+              </div>
+              <div className={cardStyle}>
                 <p className="text-2xl sm:text-3xl font-bold text-green-600">
-                  {stats.present_children}
+                {attendance.presentChildren}
                 </p>
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900">Present Children</h2>
               </div>
-              <div className={cardStyle}>
-                <p className="text-2xl sm:text-3xl font-bold text-green-600">
-                  {stats.present_monitors}
-                </p>
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900">Present Monitors</h2>
-              </div>
+
               <div className={cardStyle}>
                 <p className="text-2xl sm:text-3xl font-bold text-red-600">
-                  {stats.absent_children}
+                {attendance.absentChildren}
                 </p>
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900">Absent Children</h2>
               </div>
-              <div className={cardStyle}>
-                <p className="text-2xl sm:text-3xl font-bold text-red-600">
-                  {stats.absent_monitors}
-                </p>
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900">Absent Monitors</h2>
-              </div>
+
             </div>
 
             {/* Group Table */}
-            <div>
+            {/* <div>
               <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-900">Groups</h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm text-sm sm:text-base">
@@ -111,25 +135,33 @@ const DashboardCoordinator = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {groups.map((group, index) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      >
-                        <td className="px-6 py-4 border-b border-gray-200">{group.groupName}</td>
-                        <td className="px-6 py-4 border-b border-gray-200">{group.children}</td>
-                        <td className="px-6 py-4 border-b border-gray-200 text-green-600 font-semibold">
-                          {group.present}
-                        </td>
-                        <td className="px-6 py-4 border-b border-gray-200 text-red-600 font-semibold">
-                          {group.absent}
+                    {group.length > 0 ? (
+                      group.map((group) => (
+                        <tr
+                          key={group.camp_id}
+                          className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <td className="px-6 py-4 border-b border-gray-200">{group.camp_name}</td>
+                          <td className="px-6 py-4 border-b border-gray-200">{group.total_children}</td>
+                          <td className="px-6 py-4 border-b border-gray-200 text-green-600 font-semibold">
+                            {group.present_count}
+                          </td>
+                          <td className="px-6 py-4 border-b border-gray-200 text-red-600 font-semibold">
+                            {group.absent_count}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                          No data available
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
-              </div>
-            </div>
+              </div> */}
+            {/* </div> */}
           </div>
         </main>
       </div>
