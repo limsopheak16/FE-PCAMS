@@ -1,84 +1,123 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SidebarMenu from "../components/sidebar";
+import { getUserProfile } from "../api/getUserProfile"; // adjust path as needed
+import { updateUser } from "../api/updateUser";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    khmerName: "សេង គីមើ",
-    englishName: "Seng kimer",
-    dob: "2005-06-21",
-    nationality: "Khmer",
-    position: "Admin",
+    username: "",
+    email: "",
+    role: "",
   });
+  const [updatedAt, setUpdatedAt] = useState(null);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  
+  // Extract fetch profile function so we can call it on mount and after save
+  const fetchProfile = async () => {
+    const profile = await getUserProfile();
+    if (profile) {
+      setFormData({
+        username: profile.username || "",
+        email: profile.email || "",
+        role: profile.role || "",
+      });
+      setUpdatedAt(profile.updatedAt || null);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(null);
   };
 
   const handleEdit = () => setIsEditing(true);
-  const handleCancel = () => setIsEditing(false);
-  const handleSave = () => {
+
+  const handleCancel = () => {
+    fetchProfile(); // reload profile data and discard changes
+    setError(null);
     setIsEditing(false);
-    console.log("Saved:", formData);
+  };
+
+  const handleSave = async () => {
+    try {
+      setError(null);
+      const profile = await getUserProfile();
+      if (!profile || !profile.id) {
+        setError("User profile ID not found");
+        return;
+      }
+
+      const updated = await updateUser(profile.id, formData);
+      if (updated) {
+        // After successful update, re-fetch profile to get latest data
+        await fetchProfile();
+        setIsEditing(false);
+      } else {
+        setError("Failed to update profile");
+      }
+    } catch (err) {
+      setError("Error updating profile. Please try again.");
+      console.error(err);
+    }
   };
 
   return (
-    <div className="flex">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <SidebarMenu />
-      <div className="flex justify-center items-center min-h-screen bg-white w-full">
-        <div className="border border-blue-300 rounded-lg px-25 py-10 bg-gray-50 w-[939px] shadow-sm">
-          {/* Profile Picture */}
+      <div className="flex flex-1 justify-center items-center bg-white px-4 py-8">
+        <div className="w-full max-w-2xl border border-blue-300 rounded-lg p-6 md:p-10 bg-gray-50 shadow-sm">
           <div className="flex justify-center mb-6">
             <img
-              src="https://randomuser.me/api/portraits/women/44.jpg"
+              src="https://randomuser.me/api/portraits/men/44.jpg"
               alt="Profile"
-              className="w-40 h-40 rounded-full object-cover shadow"
+              className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow"
             />
           </div>
 
-          {/* Input fields */}
+          {/* Last updated date */}
+          <div className="mt-2 mb-6 text-center text-sm text-gray-600">
+            {updatedAt ? (
+              <p>Last updated: {new Date(updatedAt).toLocaleString()}</p>
+            ) : (
+              <p>No update date available</p>
+            )}
+          </div>
+
           <div className="space-y-4">
             <InputField
-              label="Khmer name"
-              name="khmerName"
-              value={formData.khmerName}
+              label="Username"
+              name="username"
+              value={formData.username}
               editable={isEditing}
               onChange={handleChange}
             />
             <InputField
-              label="English name"
-              name="englishName"
-              value={formData.englishName}
+              label="Email"
+              name="email"
+              value={formData.email}
               editable={isEditing}
               onChange={handleChange}
+              type="email"
             />
             <InputField
-              label="Date of birth"
-              name="dob"
-              type="date"
-              value={formData.dob}
-              editable={isEditing}
-              onChange={handleChange}
-            />
-            <InputField
-              label="National"
-              name="nationality"
-              value={formData.nationality}
-              editable={isEditing}
-              onChange={handleChange}
-            />
-            <InputField
-              label="Position"
-              name="position"
-              value={formData.position}
+              label="Role"
+              name="role"
+              value={formData.role}
               editable={isEditing}
               onChange={handleChange}
             />
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-start gap-4 mt-6">
+          {error && <p className="text-red-600 mt-4">{error}</p>}
+
+          <div className="flex flex-col sm:flex-row justify-start gap-3 mt-6">
             {isEditing ? (
               <>
                 <button

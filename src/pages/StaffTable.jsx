@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import SidebarMenu from "../components/sidebar";
 import { getUsers } from "../api/getUser";
+import { deleteUser } from "../api/daleteUser";
 
 const StaffTable = () => {
   const navigate = useNavigate();
@@ -12,29 +13,59 @@ const StaffTable = () => {
 
   useEffect(() => {
     const fetchStaff = async () => {
-      const data = await getUsers();
-      if (data) {
-        setStaffList(data);
-      } else {
-        toast.error("Failed to fetch staff data.");
+      try {
+        const data = await getUsers();
+        if (data) {
+          setStaffList(data);
+        } else {
+          toast.error("Failed to fetch staff data.");
+        }
+      } catch (error) {
+        toast.error("Error fetching staff data: " + error.message);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchStaff();
   }, []);
 
-  const handleRowClick = (originalId) => {
-    navigate(`/staff/${originalId}`);
+  const handleRowClick = (id) => {
+    navigate(`/users/${id}`);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+      const deleted = await deleteUser(id);
+      if (deleted) {
+        toast.success("User deleted successfully.");
+        const data = await getUsers();
+        if (data) {
+          setStaffList(data);
+        } else {
+          toast.error("Failed to refresh staff list.");
+        }
+      } else {
+        toast.error("Failed to delete user.");
+      }
+    } catch (error) {
+      toast.error("Error deleting user: " + error.message);
+    }
+  };
+
+  const handleUpdate = (id) => {
+    navigate(`/staff/edit/${id}`);
   };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       <SidebarMenu />
-      <div className="flex-1 md:ml-[250px]">
+      <div className="flex-1 md:ml-[272px]">
         {/* Unified Header */}
-        <header className="flex items-center justify-between px-4 py-3 bg-white shadow-md md:px-5 md:py-3">
-          <h1 className="text-lg font-bold text-gray-900 md:text-xl">Staff List</h1>
+        <header className="flex items-center justify-between px-6 py-4 bg-white shadow-md md:px-5 md:py-3">
+          <h1 className="text-2xl font-bold text-gray-900">Staff List</h1>
           <button
             onClick={() => navigate("/adduser")}
             className="flex items-center gap-2 bg-[#4F7CFF] text-white px-4 py-2 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-sm md:text-base md:px-5 md:py-2.5"
@@ -69,32 +100,48 @@ const StaffTable = () => {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Role</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nationality</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan={4} className="text-center text-gray-500 py-8 text-sm md:text-base">
+                      <td colSpan={5} className="text-center text-gray-500 py-8 text-sm md:text-base">
                         Loading...
                       </td>
                     </tr>
                   ) : staffList.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="text-center text-gray-500 py-8 text-sm md:text-base">
+                      <td colSpan={5} className="text-center text-gray-500 py-8 text-sm md:text-base">
                         No staff found.
                       </td>
                     </tr>
                   ) : (
                     staffList.map((staff) => (
                       <tr
-                        key={staff.originalId}
-                        onClick={() => handleRowClick(staff.originalId)}
-                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        key={staff.id}
+                        className="hover:bg-gray-50 transition-colors"
                       >
                         <td className="px-6 py-4 text-sm text-gray-900">{staff.username}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{staff.email}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{staff.role}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{staff.nationality}</td>
+                        <td className="px-6 py-4 text-center space-x-2">
+                          <button
+                            onClick={() => handleUpdate(staff.id)}
+                            className="text-blue-600 hover:text-blue-800"
+                            aria-label={`Edit ${staff.username}`}
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(staff.id)}
+                            className="text-red-600 hover:text-red-800"
+                            aria-label={`Delete ${staff.username}`}
+                          >
+                            <FaTrash />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -111,17 +158,37 @@ const StaffTable = () => {
               ) : (
                 staffList.map((staff) => (
                   <div
-                    key={staff.originalId}
-                    onClick={() => handleRowClick(staff.originalId)}
-                    className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition cursor-pointer"
+                    key={staff.id}
+                    className="bg-white rounded-xl shadow-sm p-4"
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-base font-semibold text-gray-900 truncate">{staff.username}</h3>
-                        <p className="text-xs text-gray-500 mt-1">Email: {staff.email}</p>
-                        <p className="text-xs text-gray-500 mt-1">Role: {staff.role}</p>
-                        <p className="text-xs text-gray-500 mt-1">Nationality: {staff.nationality}</p>
-                      </div>
+                    <div
+                      onClick={() => handleRowClick(staff.id)}
+                      className="cursor-pointer"
+                    >
+                      <h3 className="text-base font-semibold text-gray-900 truncate">{staff.username}</h3>
+                      <p className="text-xs text-gray-500 mt-1">Email: {staff.email}</p>
+                      <p className="text-xs text-gray-500 mt-1">Role: {staff.role}</p>
+                      <p className="text-xs text-gray-500 mt-1">Nationality: {staff.nationality}</p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-4 flex justify-end gap-3">
+                      <button
+                        onClick={() => handleUpdate(staff.id)}
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                        aria-label={`Edit ${staff.username}`}
+                      >
+                        <FaEdit />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(staff.id)}
+                        className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm"
+                        aria-label={`Delete ${staff.username}`}
+                      >
+                        <FaTrash />
+                        <span>Delete</span>
+                      </button>
                     </div>
                   </div>
                 ))
