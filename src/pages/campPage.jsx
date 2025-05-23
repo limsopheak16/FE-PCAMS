@@ -34,7 +34,7 @@ const PSECampsPage = () => {
       <div className="flex-1 md:ml-[272px]">
         {/* Unified Header */}
         <header className="flex items-center justify-between px-4 py-3 bg-white shadow-md md:px-5 md:py-3">
-          <h1 className="text-2xl font-bold text-gray-900">PSE Camps</h1>
+          <h1 className="text-2xl font-bold text-gray-900 ">PSE Camps</h1>
           <button
             onClick={() => navigate("/addcamp")}
             className="flex items-center gap-2 bg-[#4F7CFF] text-white px-4 py-2 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-sm md:text-base md:px-5 md:py-2.5"
@@ -60,25 +60,24 @@ const PSECampsPage = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-100">
+            <div className="hidden md:block bg-white rounded-2xl shadow-md overflow-x-auto">
+              <table className="w-full text-base text-left text-gray-600">
+                <thead className="bg-gray-100 text-lg">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Location</th>
-
+                    <th className="px-8 py-5 font-semibold text-gray-700">Name</th>
+                    <th className="px-8 py-5 font-semibold text-gray-700">Location</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {loading ? (
                     <tr>
-                      <td colSpan={4} className="text-center text-gray-500 py-8 text-sm md:text-base">
+                      <td colSpan={2} className="text-center text-gray-500 py-10 text-lg">
                         Loading...
                       </td>
                     </tr>
                   ) : camps.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="text-center text-gray-500 py-8 text-sm md:text-base">
+                      <td colSpan={2} className="text-center text-gray-500 py-10 text-lg">
                         No camps found.
                       </td>
                     </tr>
@@ -89,15 +88,15 @@ const PSECampsPage = () => {
                         onClick={() => handleRowClick(camp.id)}
                         className="hover:bg-gray-50 transition-colors cursor-pointer"
                       >
-                        <td className="px-6 py-4 text-sm text-gray-900">{camp.camp_name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{camp.camp_location}</td>
-                    
+                        <td className="px-8 py-5">{camp.camp_name}</td>
+                        <td className="px-8 py-5">{camp.camp_location}</td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
+
 
             {/* Mobile Card View */}
             <div className="md:hidden grid grid-cols-1 gap-4">
@@ -115,7 +114,7 @@ const PSECampsPage = () => {
                     <div>
                       <h3 className="text-base font-semibold text-gray-900 truncate">{camp.camp_name}</h3>
                       <p className="text-xs text-gray-500 mt-1">Location: {camp.camp_location}</p>
-                    
+
                     </div>
                   </div>
                 ))

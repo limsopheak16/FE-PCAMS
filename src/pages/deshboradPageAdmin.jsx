@@ -152,7 +152,7 @@ const DashboardAdmin = () => {
 
       <div className="flex-1 md:ml-[272px]">
         <header className="hidden md:flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
-          <h1 className="text-3xl font-bold text-gray-900">Camp Overview</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Camp Overview</h1>
         </header>
 
         <main className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12">
