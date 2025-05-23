@@ -124,10 +124,10 @@ const TrackingAttendancePage: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 md:ml-[250px]">
+      <div className="flex-1 md:ml-[272px]">
         {/* Header */}
         <header className="flex items-center justify-between px-4 py-3 bg-white shadow-md">
-          <h1 className="text-lg md:text-xl font-bold text-gray-900">Attendance Tracking</h1>
+          <h1 className="text-2xl font-bold  text-gray-900">Attendance Tracking</h1>
           <button
             onClick={() => navigate("/addchild")}
             className="flex items-center gap-2 bg-[#4F7CFF] text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-sm md:text-base"

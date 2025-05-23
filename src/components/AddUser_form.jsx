@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createUser } from "../api/createUser"; // Updated import name
+import { createUser } from "../api/createUser";
 
 const FormAddUser = () => {
   const navigate = useNavigate();
@@ -27,12 +27,7 @@ const FormAddUser = () => {
 
   const validateForm = () => {
     let isValid = true;
-    const newErrors = {
-      username: "",
-      email: "",
-      password: "",
-      role: "",
-    };
+    const newErrors = { ...errors };
 
     if (!formData.username.trim()) {
       newErrors.username = "Please enter Username";
@@ -93,14 +88,18 @@ const FormAddUser = () => {
     });
   };
 
+  const handleBack = () => {
+    navigate("/user");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Headers */}
       <header className="hidden md:flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900">Add New User</h1>
         <button
-          onClick={() => navigate("/user")}
-          className="text-[#4F7CFF] hover:underline font-medium"
-          aria-label="Go back to user list"
+          onClick={handleBack}
+          className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 shadow-sm transition"
         >
           Back
         </button>
@@ -109,121 +108,106 @@ const FormAddUser = () => {
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white shadow-md">
         <h1 className="text-xl font-bold text-gray-900">Add New User</h1>
         <button
-          onClick={() => navigate("/user")}
-          className="text-[#4F7CFF] hover:underline text-sm"
-          aria-label="Go back to user list"
+          onClick={handleBack}
+          className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 shadow-sm transition"
         >
           Back
         </button>
       </header>
 
-      <main className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12">
-        <div className="max-w-md mx-auto">
+      {/* Form */}
+      <main className="p-6 sm:p-10 md:p-14 lg:p-16 xl:p-15">
+        <div className="max-w-3xl mx-auto">
           <form
             onSubmit={handleCreate}
-            className="w-full p-6 bg-white border border-gray-200 rounded-xl shadow-md"
+            className="w-full p-8 bg-white border border-gray-200 rounded-2xl shadow-lg"
           >
-            <div className="mb-5">
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Username <span className="text-red-500">*</span>
+            {/* Username */}
+            <div className="mb-3">
+              <label className="block text-base font-semibold text-gray-700 mb-3">
+                Username
               </label>
               <input
-                id="username"
                 type="text"
                 name="username"
-                placeholder="Enter username"
+                placeholder="Enter Username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                aria-required="true"
+                className="w-full px-5 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
               />
               {errors.username && (
-                <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
               )}
             </div>
 
-            <div className="mb-5">
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Email <span className="text-red-500">*</span>
+            {/* Email */}
+            <div className="mb-3">
+              <label className="block text-base font-semibold text-gray-700 mb-3">
+                Email
               </label>
               <input
-                id="email"
                 type="email"
                 name="email"
                 placeholder="Enter Email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                aria-required="true"
+                className="w-full px-5 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
               />
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
               )}
             </div>
 
-            <div className="mb-5">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Password <span className="text-red-500">*</span>
+            {/* Password */}
+            <div className="mb-3">
+              <label className="block text-base font-semibold text-gray-700 mb-3">
+                Password
               </label>
               <input
-                id="password"
                 type="password"
                 name="password"
                 placeholder="Enter Password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                aria-required="true"
+                className="w-full px-5 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
               />
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
               )}
             </div>
 
-            <div className="mb-5">
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Role <span className="text-red-500">*</span>
+            {/* Role */}
+            <div className="mb-8">
+              <label className="block text-base font-semibold text-gray-700 mb-3">
+                Role
               </label>
               <select
-                id="role"
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] transition"
-                aria-required="true"
+                className="w-full px-5 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
               >
                 <option value="">Select Role</option>
                 <option value="coordinator">Coordinator</option>
                 <option value="monitor">Monitor</option>
               </select>
               {errors.role && (
-                <p className="text-red-500 text-xs mt-1">{errors.role}</p>
+                <p className="text-red-500 text-sm mt-1">{errors.role}</p>
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
               <button
                 type="submit"
-                className="flex-1 bg-[#4F7CFF] text-white py-3 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md font-medium"
+                className="flex-1 bg-[#4F7CFF] text-white py-4 text-base rounded-xl hover:bg-[#3B65E6] font-semibold"
               >
                 Create
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition-shadow hover:shadow-md font-medium"
+                className="flex-1 bg-gray-200 text-gray-800 py-4 text-base rounded-xl hover:bg-gray-300 font-semibold"
               >
                 Cancel
               </button>

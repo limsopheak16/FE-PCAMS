@@ -31,10 +31,10 @@ const PSECampsPage = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <SidebarMenu />
-      <div className="flex-1 md:ml-[250px]">
+      <div className="flex-1 md:ml-[272px]">
         {/* Unified Header */}
         <header className="flex items-center justify-between px-4 py-3 bg-white shadow-md md:px-5 md:py-3">
-          <h1 className="text-lg font-bold text-gray-900 md:text-xl">PSE Camps</h1>
+          <h1 className="text-2xl font-bold text-gray-900">PSE Camps</h1>
           <button
             onClick={() => navigate("/addcamp")}
             className="flex items-center gap-2 bg-[#4F7CFF] text-white px-4 py-2 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-sm md:text-base md:px-5 md:py-2.5"
