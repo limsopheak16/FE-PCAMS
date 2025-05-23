@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus } from "lucide-react";
 import Sidebar from "../components/sidebar";
+import { PlusCircle } from "lucide-react";
+
 
 // Types
 interface Student {
@@ -27,13 +29,13 @@ interface StatusCellProps {
 
 const StatusCell: React.FC<StatusCellProps> = ({ status, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const statusOptions: Student["status"][] = ["Present",  "Absent"];
+  const statusOptions: Student["status"][] = ["Present", "Absent"];
 
   const getStatusColor = (status: Student["status"]) => {
     switch (status) {
       case "Present":
         return "text-green-600 bg-green-100";
-    
+
       case "Absent":
         return "text-red-600 bg-red-100";
       default:
@@ -127,13 +129,13 @@ const TrackingAttendancePage: React.FC = () => {
       <div className="flex-1 md:ml-[272px]">
         {/* Header */}
         <header className="flex items-center justify-between px-4 py-3 bg-white shadow-md">
-          <h1 className="text-2xl font-bold  text-gray-900">Attendance Tracking</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Attendance Tracking</h1>
           <button
             onClick={() => navigate("/addchild")}
             className="flex items-center gap-2 bg-[#4F7CFF] text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-sm md:text-base"
             aria-label="Create new child"
           >
-            <Plus size={20} />
+            <PlusCircle className="w-5 h-5" />
             <span>Add New Child</span>
           </button>
         </header>
@@ -148,12 +150,12 @@ const TrackingAttendancePage: React.FC = () => {
                 className="w-full flex items-center justify-center gap-2 bg-[#4F7CFF] text-white px-4 py-3 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-base"
                 aria-label="Create new child"
               >
-                <Plus size={22} />
+                <PlusCircle className="w-5 h-5" />
                 <span>Add New Child</span>
               </button>
             </div>
- {/* Controls (Moved to Bottom/End) */}
- <div className="flex flex-col md:flex-row gap-4 md:justify-end">
+            {/* Controls (Moved to Bottom/End) */}
+            <div className="flex flex-col md:flex-row gap-4 md:justify-end">
               {/* Date Selection */}
               <div className="w-full md:w-40">
                 <label
@@ -214,8 +216,8 @@ const TrackingAttendancePage: React.FC = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] text-sm"
                 />
-<Search className="absolute left-3 top-1/2 transform  text-gray-400" size={18} />
-</div>
+                <Search className="absolute left-3 top-1/2 transform  text-gray-400" size={18} />
+              </div>
             </div>
             {/* Student Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -247,7 +249,7 @@ const TrackingAttendancePage: React.FC = () => {
               )}
             </div>
 
-           
+
           </div>
         </main>
       </div>
