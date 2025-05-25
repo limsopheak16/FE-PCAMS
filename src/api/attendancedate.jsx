@@ -1,28 +1,25 @@
+// fetchAttendanceData.js
 import axiosInstance from "./axiosInstance";
 
-export const fetchAttendanceData = async ({ selectedCamp, startDate, endDate, setPending }) => {
-    if (!selectedCamp || !startDate || !endDate) return null;
-  
-    setPending(true);
-  
-    try {
-      const res = await axiosInstance.get('/dashboard', {
-        params: { 
-          campId: selectedCamp,       // camp UUID
-          startDate: startDate,       // match backend expected query param
-          endDate: endDate,           // match backend expected query param
-        },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-  
-      console.log( res.data.attendance, "API request params");
-      return res.data;
-    } catch (err) {
-      console.error("Error fetching attendance data:", err);
-      return null;
-    } finally {
-      setPending(false);
-    }
-  };
+export const fetchAttendanceData = async ({ selectedDate, userId }) => {
+  if (!selectedDate || !userId) {
+    console.warn("Missing selectedDate or userId for fetching attendance.");
+    return [];
+  }
+
+  try {
+    const res = await axiosInstance.get('/childattendances/attendance', {
+      params: {
+        date: selectedDate,
+        user_id: userId,
+      },
+    });
+ 
+    console.log("==============",res)
+    return res.data.data; // assuming API returns an array of attendance records
+  } catch (error) {
+    console.error("Error fetching attendance data:", error);
+    throw error;
+  }
+};
+
