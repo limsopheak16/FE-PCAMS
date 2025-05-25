@@ -205,7 +205,7 @@ const StaffTable = () => {
                     </div>
 
                     {/* Nationality */}
-                    {/* <div className="mb-8">
+                    <div className="mb-8">
                       <label className="block text-lg font-semibold text-gray-700 mb-3">Nationality</label>
                       <input
                         type="text"
@@ -215,7 +215,7 @@ const StaffTable = () => {
                         className="w-full px-6 py-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
                         required
                       />
-                    </div> */}
+                    </div>
 
                     {/* Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -241,7 +241,7 @@ const StaffTable = () => {
             {/* Desktop Table View */}
             <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-100">
+                <thead className="bg-gray-200">
                   <tr>
                     <th className="px-8 py-5 text-left text-base font-semibold text-gray-700">Username</th>
                     <th className="px-8 py-5 text-left text-base font-semibold text-gray-700">Email</th>

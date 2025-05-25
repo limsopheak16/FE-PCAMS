@@ -61,8 +61,8 @@ const PSECampsPage = () => {
 
             {/* Desktop Table View */}
             <div className="hidden md:block bg-white rounded-2xl shadow-md overflow-x-auto">
-              <table className="w-full text-base text-left text-gray-600">
-                <thead className="bg-gray-100 text-lg">
+              <table className="w-full text-base text-left text-gray-900">
+                <thead className="bg-gray-200 text-lg">
                   <tr>
                     <th className="px-8 py-5 font-semibold text-gray-700">Name</th>
                     <th className="px-8 py-5 font-semibold text-gray-700">Location</th>

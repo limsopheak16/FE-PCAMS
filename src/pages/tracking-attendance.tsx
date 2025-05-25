@@ -1,41 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus } from "lucide-react";
+import { Search, PlusCircle } from "lucide-react";
 import Sidebar from "../components/sidebar";
-import { PlusCircle } from "lucide-react";
+import { fetchAttendanceData } from "../api/attendancedate";
+import { getUsers } from "../api/getUser";
+import { toast } from "react-toastify";
+import { updateAttendanceStatus } from "../api/updateAttendanceStatus";
 
-
-// Types
-interface Student {
+interface Attendance {
   id: string;
-  englishName: string;
+  fullname: string;
+  gender: string;
   age: number;
-  status: "Present" | "Late" | "Absent";
-  familyId?: string;
+  status: "Present" | "Absent";
+  family_id?: string;
+  username: string;
 }
 
-interface Organizer {
+interface User {
   id: string;
-  name: string;
+  username: string;
 }
 
-// Status Dropdown Component
 interface StatusCellProps {
-  status: Student["status"];
-  onChange: (status: Student["status"]) => void;
+  status: Attendance["status"];
+  onChange: (status: Attendance["status"]) => void;
 }
 
 const StatusCell: React.FC<StatusCellProps> = ({ status, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const statusOptions: Student["status"][] = ["Present", "Absent"];
+  const statusOptions: Attendance["status"][] = ["Present", "Absent"];
 
-  const getStatusColor = (status: Student["status"]) => {
+  const getStatusColor = (status: Attendance["status"]) => {
     switch (status) {
       case "Present":
         return "text-green-600 bg-green-100";
-
       case "Absent":
         return "text-red-600 bg-red-100";
       default:
@@ -46,19 +47,17 @@ const StatusCell: React.FC<StatusCellProps> = ({ status, onChange }) => {
   return (
     <div className="relative inline-block">
       <button
-        className={`font-medium px-3 py-1.5 rounded-full ${getStatusColor(status)} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm`}
+        type="button"
+        className={`font-medium px-3 py-2 rounded-md ${getStatusColor(status)} focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] text-sm`}
         onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
       >
         {status}
       </button>
       {isOpen && (
-        <div className="absolute z-20 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg">
+        <div className="absolute z-20 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg">
           {statusOptions.map((option) => (
             <div
               key={option}
-              role="option"
               className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-50 ${getStatusColor(option).split(" ")[0]}`}
               onClick={() => {
                 onChange(option);
@@ -74,36 +73,77 @@ const StatusCell: React.FC<StatusCellProps> = ({ status, onChange }) => {
   );
 };
 
-// Main Component
 const TrackingAttendancePage: React.FC = () => {
   const navigate = useNavigate();
   const today = new Date().toISOString().split("T")[0];
 
-  const [students, setStudents] = useState<Student[]>([
-    { id: "21775-1", englishName: "Sopheak Lim", age: 19, status: "Present", familyId: "F001" },
-    { id: "21775-2", englishName: "Somala Eng", age: 18, status: "Absent", familyId: "F002" },
-    { id: "21775-3", englishName: "Nita San", age: 17, status: "Absent", familyId: "F003" },
-    { id: "21775-4", englishName: "Sovanna Chan", age: 20, status: "Present", familyId: "F004" },
-  ]);
+  const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>(today);
+  const [selectedOrganizer, setSelectedOrganizer] = useState<string>("");
+  const [dateError, setDateError] = useState<string>("");
+  const [staffList, setStaffList] = useState<User[]>([]);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDate, setSelectedDate] = useState(today);
-  const [selectedOrganizer, setSelectedOrganizer] = useState("");
-  const [dateError, setDateError] = useState("");
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const data = await getUsers();
+        if (Array.isArray(data)) {
+          setStaffList(data);
+        } else {
+          toast.error("Invalid staff data format received.");
+        }
+      } catch (error: any) {
+        toast.error("Error fetching staff data: " + error.message);
+      }
+    };
 
-  const organizers: Organizer[] = [
-    { id: "org1", name: "John Doe" },
-    { id: "org2", name: "Jane Smith" },
-    { id: "org3", name: "Sokha Vong" },
-  ];
+    fetchStaff();
+  }, []);
 
-  const handleStatusChange = (id: string, newStatus: Student["status"]) => {
-    setStudents((prev) =>
-      prev.map((student) =>
-        student.id === id ? { ...student, status: newStatus } : student
-      )
-    );
+  const getAttendanceData = useCallback(async () => {
+    if (!selectedDate || !selectedOrganizer) return;
+
+    setLoading(true);
+    try {
+      const data = await fetchAttendanceData({
+        selectedDate,
+        userId: selectedOrganizer,
+      });
+
+      if (Array.isArray(data)) {
+        setAttendanceRecords(data);
+      } else {
+        toast.error("Invalid attendance data format received.");
+      }
+    } catch (error) {
+      toast.error("Error fetching attendance data.");
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDate, selectedOrganizer]);
+
+  useEffect(() => {
+    getAttendanceData();
+  }, [getAttendanceData]);
+
+  const handleStatusChange = async (id: string, newStatus: Attendance["status"]) => {
+    try {
+      const updatedRecord = await updateAttendanceStatus({ attendanceId: id, status: newStatus });
+      // updatedRecord should contain the latest status from backend
+      setAttendanceRecords((prev) =>
+        prev.map((record) =>
+          record.id === id ? { ...record, status: updatedRecord.status } : record
+        )
+      );
+      console.log(updatedRecord.status,"----------------------------------")
+      toast.success("Attendance status updated successfully.");
+    } catch (error: any) {
+      toast.error("Failed to update attendance status.");
+    }
   };
+  
 
   const handleDateChange = (date: string) => {
     const currentDate = new Date();
@@ -116,52 +156,43 @@ const TrackingAttendancePage: React.FC = () => {
     }
   };
 
-  const filteredStudents = students.filter(
-    (student) =>
-      student.id.includes(searchQuery) ||
-      student.englishName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (student.familyId && student.familyId.includes(searchQuery))
+  const filteredAttendanceRecords = attendanceRecords.filter(
+    (record) =>
+      record.id.includes(searchQuery) ||
+      record.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (record.family_id && record.family_id.includes(searchQuery))
   );
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 md:ml-[272px]">
-        {/* Header */}
         <header className="flex items-center justify-between px-4 py-3 bg-white shadow-md">
           <h1 className="text-2xl font-bold text-gray-900">Attendance Tracking</h1>
           <button
             onClick={() => navigate("/addchild")}
             className="flex items-center gap-2 bg-[#4F7CFF] text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-sm md:text-base"
-            aria-label="Create new child"
           >
             <PlusCircle className="w-5 h-5" />
             <span>Add New Child</span>
           </button>
         </header>
 
-        {/* Main Content */}
         <main className="p-4 sm:p-6">
           <div className="max-w-7xl mx-auto">
-            {/* Create Button (Mobile) */}
             <div className="md:hidden mb-4">
               <button
                 onClick={() => navigate("/addchild")}
                 className="w-full flex items-center justify-center gap-2 bg-[#4F7CFF] text-white px-4 py-3 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-base"
-                aria-label="Create new child"
               >
                 <PlusCircle className="w-5 h-5" />
                 <span>Add New Child</span>
               </button>
             </div>
-            {/* Controls (Moved to Bottom/End) */}
-            <div className="flex flex-col md:flex-row gap-4 md:justify-end">
-              {/* Date Selection */}
+
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="w-full md:w-40">
-                <label
-                  htmlFor="selected-date"
-                  className="block text-sm font-semibold text-gray-700 mb-1"
-                >
+                <label htmlFor="selected-date" className="block text-sm font-semibold text-gray-700 mb-1">
                   Date
                 </label>
                 <input
@@ -170,42 +201,32 @@ const TrackingAttendancePage: React.FC = () => {
                   value={selectedDate}
                   onChange={(e) => handleDateChange(e.target.value)}
                   max={today}
-                  className="w-full bg-gray-100 text-gray-700 font-medium rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
                 />
-                {dateError && (
-                  <p className="text-red-500 text-xs mt-1">{dateError}</p>
-                )}
+                {dateError && <p className="text-red-500 text-xs mt-1">{dateError}</p>}
               </div>
 
-              {/* Organizer Dropdown */}
-              <div className="w-full md:w-64 mb-5">
-                <label
-                  htmlFor="organizer-select"
-                  className="block text-sm font-semibold text-gray-700 mb-1"
-                >
+              <div className="w-full md:w-64">
+                <label htmlFor="organizer-select" className="block text-sm font-semibold text-gray-700 mb-1">
                   Organizer
                 </label>
                 <select
                   id="organizer-select"
                   value={selectedOrganizer}
                   onChange={(e) => setSelectedOrganizer(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
                 >
                   <option value="">Select Organizer</option>
-                  {organizers.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
+                  {staffList.map((staff) => (
+                    <option key={staff.id} value={staff.id}>
+                      {staff.username}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Search Input */}
-              <div className="relative w-full md:w-64 mb-5">
-                <label
-                  htmlFor="search-input"
-                  className="block text-sm font-semibold text-gray-700 mb-1"
-                >
+              <div className="relative w-full md:w-64">
+                <label htmlFor="search-input" className="block text-sm font-semibold text-gray-700 mb-1">
                   Search
                 </label>
                 <input
@@ -214,42 +235,57 @@ const TrackingAttendancePage: React.FC = () => {
                   placeholder="ID, Family ID, or Name"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] text-sm"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
                 />
-                <Search className="absolute left-3 top-1/2 transform  text-gray-400" size={18} />
+                <Search className="absolute left-3 top-9 transform -translate-y-1/2 text-gray-400" size={18} />
               </div>
             </div>
-            {/* Student Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {filteredStudents.map((student) => (
-                <div
-                  key={student.id}
-                  className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-base md:text-lg font-semibold text-gray-900 truncate">{student.englishName}</h3>
-                      <p className="text-xs md:text-sm text-gray-500">ID: {student.id}</p>
-                      {student.familyId && (
-                        <p className="text-xs md:text-sm text-gray-500">Family ID: {student.familyId}</p>
-                      )}
-                      <p className="text-xs md:text-sm text-gray-500">Age: {student.age}</p>
-                    </div>
-                    <StatusCell
-                      status={student.status}
-                      onChange={(newStatus) => handleStatusChange(student.id, newStatus)}
-                    />
-                  </div>
-                </div>
-              ))}
-              {filteredStudents.length === 0 && (
-                <div className="col-span-full text-center text-gray-500 py-8 text-sm md:text-base">
-                  No students found.
-                </div>
-              )}
+
+            <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Full Name</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Created By</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Family ID</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Gender</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Age</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : filteredAttendanceRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
+                        No attendance records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredAttendanceRecords.map((record) => (
+                      <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 text-sm text-gray-900">{record.fullname}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{record.username}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{record.family_id || "-"}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{record.gender}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{record.age}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          <StatusCell
+                            status={record.status}
+                            onChange={(newStatus) => handleStatusChange(record.id, newStatus)}
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-
-
           </div>
         </main>
       </div>
