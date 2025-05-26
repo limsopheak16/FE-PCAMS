@@ -8,7 +8,7 @@ import {
   Bell,
   User,
   LayoutDashboard,
-  Menu as MenuIcon,
+  MenuIcon,
   X as CloseIcon,
 } from "lucide-react";
 
@@ -26,6 +26,7 @@ const SidebarMenu = () => {
 
   const menuItems = [
     { icon: Calendar, label: "Camp", path: "/camp" },
+    { icon: Calendar, label: "Event Camp", path: "/eventcamp" },
     { icon: Users, label: "Attendance", path: "/attendance" },
     { icon: LayoutDashboard, label: "Coordinator Dashboard", path: "/dashboard" },
     { icon: User, label: "Add User", path: "/user" },
@@ -69,7 +70,13 @@ const SidebarMenu = () => {
             <div className="flex flex-col px-4 py-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.path;
+                // Highlight "Event Camp" for /eventcamp, /eventcamp/, or /eventcampdetail/
+                const isActive =
+                  item.path === "/eventcamp"
+                    ? location.pathname === "/eventcamp" ||
+                      location.pathname.startsWith("/eventcamp/") ||
+                      location.pathname.startsWith("/eventcampdetail/")
+                    : location.pathname === item.path;
 
                 return (
                   <div
@@ -137,7 +144,13 @@ const SidebarMenu = () => {
         <nav className="p-5 flex-1 space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            // Highlight "Event Camp" for /eventcamp, /eventcamp/, or /eventcampdetail/
+            const isActive =
+              item.path === "/eventcamp"
+                ? location.pathname === "/eventcamp" ||
+                  location.pathname.startsWith("/eventcamp/") ||
+                  location.pathname.startsWith("/campeventdetail/")
+                : location.pathname === item.path;
 
             return (
               <div
