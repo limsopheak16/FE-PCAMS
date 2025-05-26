@@ -17,30 +17,47 @@ const LoginPage = () => {
     setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
-  
+
     try {
       const response = await axiosInstance.post("/auth/login", { email, password });
       console.log("Response status:", response.status);
       console.log("Response data:", response.data.data.token);
-  
+
       if (response.status === 200) {
         const data = response.data;
         setSuccessMsg("Login successful!");
-  
+
         if (data.data.token) {
           localStorage.setItem("token", data.data.token);
           console.log("Token saved in localStorage:", localStorage.getItem("token"));
-        
-          // ✅ Save userId here
-          localStorage.setItem("userId", data.data.user.id); // <-- Make sure this path is correct
+
+          // Save userId and role
+          localStorage.setItem("userId", data.data.user.id);
           console.log("User ID saved in localStorage:", localStorage.getItem("userId"));
+          localStorage.setItem("role", data.data.user.role);
+          console.log("Role saved in localStorage:", localStorage.getItem("role"));
+
+          // Redirect based on role
+          const userRole = data.data.user.role.toLowerCase();
+          switch (userRole) {
+            case "admin":
+              navigate("/camp");
+              break;
+            case "coordinator":
+              navigate("/attendance");
+              break;
+            case "monitor":
+              navigate("/attendance");
+              break;
+            default:
+              navigate("/camp"); // Fallback to /camp if role is unknown
+          }
         } else {
           console.warn("No token found in response data!");
+          setErrorMsg("Login failed: No token received.");
         }
-        
-  
+
         console.log("Login success:", data);
-        navigate("/camp");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -53,7 +70,6 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen flex">

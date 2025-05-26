@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import SidebarMenu from "../components/sidebar";
 import { getUserProfile } from "../api/getUserProfile"; // adjust path as needed
 import { updateUser } from "../api/updateUser";
-import { useNavigate } from "react-router-dom";
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -11,9 +10,7 @@ export default function ProfilePage() {
     email: "",
     role: "",
   });
-  const [updatedAt, setUpdatedAt] = useState(null);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   // Extract fetch profile function so we can call it on mount and after save
   const fetchProfile = async () => {
@@ -24,7 +21,6 @@ export default function ProfilePage() {
         email: profile.email || "",
         role: profile.role || "",
       });
-      setUpdatedAt(profile.updatedAt || null);
     }
   };
 
@@ -73,22 +69,7 @@ export default function ProfilePage() {
       <SidebarMenu />
       <div className="flex flex-1 justify-center items-center bg-white px-4 py-8">
         <div className="w-full max-w-2xl border border-blue-300 rounded-lg p-6 md:p-10 bg-gray-50 shadow-sm">
-          <div className="flex justify-center mb-6">
-            <img
-              src="https://randomuser.me/api/portraits/men/44.jpg"
-              alt="Profile"
-              className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow"
-            />
-          </div>
-
-          {/* Last updated date */}
-          <div className="mt-2 mb-6 text-center text-sm text-gray-600">
-            {updatedAt ? (
-              <p>Last updated: {new Date(updatedAt).toLocaleString()}</p>
-            ) : (
-              <p>No update date available</p>
-            )}
-          </div>
+         
 
           <div className="space-y-4">
             <InputField
