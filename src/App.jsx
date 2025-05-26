@@ -12,6 +12,9 @@ import CreateCampPage from "./pages/createCampPage";
 import Fromadduser from "./components/AddUser_form";
 import StaffTable from "./pages/StaffTable";
 import ProtectedRoute from "./components/ProtectedRoute";
+import EventCampPage from "./pages/EventPage";
+import EventDetailPage from "./components/EventDetailPage"; 
+import CampEventDetailPage from "./components/CampEventDetailPage"; // Assuming this is the correct import path
 
 const App = () => {
   return (
@@ -25,6 +28,30 @@ const App = () => {
             <PSECampsPage />
           </ProtectedRoute>
         }
+      />
+      <Route  
+        path="/eventcamp"
+        element={
+          <ProtectedRoute>
+            <EventCampPage/>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+      path="/eventcamp/:id"
+      element={
+        <ProtectedRoute>
+          <EventDetailPage />
+        </ProtectedRoute>
+      }
+      />
+      <Route
+      path="/campeventdetail/:campEventId"
+      element ={
+        <ProtectedRoute>
+          <CampEventDetailPage />
+        </ProtectedRoute>
+      }
       />
       <Route
         path="/addcamp"
