@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -12,6 +12,8 @@ import {
   Filler,
 } from "chart.js";
 import SidebarMenu from "../components/sidebar";
+import { fetchDataAdmin } from "../api/getforadmin";
+import { getCamps}from "../api/getcamp"
 
 ChartJS.register(
   CategoryScale,
@@ -26,31 +28,91 @@ ChartJS.register(
 
 const DashboardAdmin = () => {
   const [selectedCamp, setSelectedCamp] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState("2025-05-01");
+  const [endDate, setEndDate] = useState("2025-05-26");
   const [dateError, setDateError] = useState("");
+  const [pending, setPending] = useState(false);
+  const [attendance, setAttendance] = useState(null);
+  const [camps, setCamps] = useState([]);
 
-  const [camps] = useState([
-    { id: "1", camp_name: "Winter Camp A" },
-    { id: "2", camp_name: "Winter Camp B" },
-  ]);
 
-  const [chartLabels, setChartLabels] = useState([
-    "2025-01-01",
-    "2025-01-02",
-    "2025-01-03",
-    "2025-01-04",
-    "2025-01-05",
-  ]);
-  const [chartData, setChartData] = useState([10, 20, 15, 25, 30]);
+  // const [camps] = useState([
+  //   { id: "1", camp_name: "Winter Camp A" },
+  //   { id: "2", camp_name: "Winter Camp B" },
+  // ]);
+
+  const [chartLabels, setChartLabels] = useState([]);
+  const [chartData, setChartData] = useState([]);
 
   const [stats, setStats] = useState({
-    totalCoordinators: 3,
-    totalMonitors: 12,
-    totalChildren: 150,
+    totalCoordinators: 0,
+    totalMonitors: 0,
+    totalChildren: 0,
   });
 
   const chartRef = useRef(null);
+  useEffect(() => {
+    const fetchCamps = async () => {
+      const data = await getCamps();
+      if (data) {
+        setCamps(data);
+      } else {
+        toast.error("Failed to fetch camp data.");
+      }
+      setLoading(false);
+    };
+
+    fetchCamps();
+  }, []);
+
+  // Fetch attendance data when selectedCamp, startDate, or endDate changes
+  useEffect(() => {
+    if (!selectedCamp || !startDate || !endDate) return;
+
+    // Validate dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
+    if (start > end) {
+      setDateError("Start date cannot be after end date");
+      return;
+    }
+    if (end > today) {
+      setDateError("End date cannot be in the future");
+      return;
+    }
+    setDateError("");
+
+    const fetchData = async () => {
+      try {
+        const data = await fetchDataAdmin({
+          startDate,
+          endDate,
+          setPending,
+        });
+
+        if (data) {
+          setAttendance(data);
+          // Assuming API returns { labels: [], data: [], stats: { totalCoordinators, totalMonitors, totalChildren } }
+          setChartLabels(data.labels || []);
+          setChartData(data.data || []);
+          setStats(
+            data.stats || {
+              totalCoordinators: 0,
+              totalMonitors: 0,
+              totalChildren: 0,
+            }
+          );
+          console.log("Fetched attendance:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+        setDateError("Failed to fetch attendance data");
+      }
+    };
+
+    fetchData();
+  }, [selectedCamp, startDate, endDate]);
 
   const handleCampChange = (e) => {
     setSelectedCamp(e.target.value);
@@ -105,46 +167,49 @@ const DashboardAdmin = () => {
     };
   }, [chartLabels, chartData]);
 
-  const chartOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: chartData.length > 0 ? Math.max(...chartData) + 5 : 50,
-        ticks: {
-          stepSize: 5,
-          color: "#6B7280",
-          font: { size: 15 },
+  const chartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: chartData.length > 0 ? Math.max(...chartData) + 5 : 50,
+          ticks: {
+            stepSize: 5,
+            color: "#6B7280",
+            font: { size: 15 },
+          },
+          grid: { color: "rgba(0, 0, 0, 0.05)" },
         },
-        grid: { color: "rgba(0, 0, 0, 0.05)" },
-      },
-      x: {
-        ticks: {
-          color: "#6B7280",
-          font: { size: 15 },
-        },
-        grid: { display: false },
-      },
-    },
-    plugins: {
-      legend: {
-        display: true,
-        position: "top",
-        labels: {
-          color: "#374151",
-          font: { size: 14 },
+        x: {
+          ticks: {
+            color: "#6B7280",
+            font: { size: 15 },
+          },
+          grid: { display: false },
         },
       },
-      tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        titleColor: "#fff",
-        bodyColor: "#fff",
-        borderColor: "#4F7CFF",
-        borderWidth: 1,
+      plugins: {
+        legend: {
+          display: true,
+          position: "top",
+          labels: {
+            color: "#374151",
+            font: { size: 14 },
+          },
+        },
+        tooltip: {
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          titleColor: "#fff",
+          bodyColor: "#fff",
+          borderColor: "#4F7CFF",
+          borderWidth: 1,
+        },
       },
-    },
-  }), [chartData]);
+    }),
+    [chartData]
+  );
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -157,13 +222,14 @@ const DashboardAdmin = () => {
 
         <main className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12">
           <div className="max-w-7xl mx-auto">
-
             {/* Filters */}
             <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end justify-between">
                 {/* Camp Select */}
                 <div className="w-full sm:w-64">
-                  <label htmlFor="camp-select" className="block text-sm font-semibold text-gray-700 mb-1">Select Camp</label>
+                  <label htmlFor="camp-select" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Select Camp
+                  </label>
                   <select
                     id="camp-select"
                     value={selectedCamp}
@@ -179,7 +245,9 @@ const DashboardAdmin = () => {
 
                 {/* Start Date */}
                 <div className="w-full sm:w-40">
-                  <label htmlFor="start-date" className="block text-sm font-semibold text-gray-700 mb-1">Start Date</label>
+                  <label htmlFor="start-date" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Start Date
+                  </label>
                   <input
                     id="start-date"
                     type="date"
@@ -192,7 +260,9 @@ const DashboardAdmin = () => {
 
                 {/* End Date */}
                 <div className="w-full sm:w-40">
-                  <label htmlFor="end-date" className="block text-sm font-semibold text-gray-700 mb-1">End Date</label>
+                  <label htmlFor="end-date" className="block text-sm font-semibold text-gray-700 mb-1">
+                    End Date
+                  </label>
                   <input
                     id="end-date"
                     type="date"
@@ -205,6 +275,9 @@ const DashboardAdmin = () => {
               </div>
               {dateError && <p className="text-red-500 mt-2 text-sm">{dateError}</p>}
             </div>
+
+            {/* Loading Indicator */}
+            {pending && <p className="text-gray-500 text-center">Loading...</p>}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -228,7 +301,6 @@ const DashboardAdmin = () => {
                 <Line ref={chartRef} data={attendanceChartData} options={chartOptions} />
               </div>
             </div>
-
           </div>
         </main>
       </div>

@@ -64,14 +64,16 @@ export default function CreateChildForm() {
     };
 
     try {
-      const created = await createChild(childData, navigate("/"));
+      const created = await createChild(childData,handleCreate);
       console.log("Created:", created);
     } catch (error) {
       alert("Failed to create child. Check console for details.");
       console.error("Error submitting child form:", error);
     }
   };
-
+  const handleCreate = () => {
+    navigate("/attendance")
+  }
   const handleCancel = () => {
     setFormData({
       fullname: "",
@@ -203,6 +205,7 @@ export default function CreateChildForm() {
             <div className="flex flex-col sm:flex-row gap-4 mt-8">
               <button
                 type="submit"
+                onClick={handleCreate}
                 className="flex-1 bg-[#4F7CFF] text-white py-4 text-base rounded-xl hover:bg-[#3B65E6] font-semibold"
               >
                 Create

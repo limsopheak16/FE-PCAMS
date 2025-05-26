@@ -8,15 +8,17 @@ import { fetchAttendanceData } from "../api/attendancedate";
 import { getUsers } from "../api/getUser";
 import { toast } from "react-toastify";
 import { updateAttendanceStatus } from "../api/updateAttendanceStatus";
+import { createChildAttendanceChecklist } from "../api/createCheckList";
 
 interface Attendance {
   id: string;
   fullname: string;
   gender: string;
   age: number;
-  status: "Present" | "Absent";
+  status: "Present" | "Absent" | null;
   family_id?: string;
   username: string;
+
 }
 
 interface User {
@@ -36,29 +38,29 @@ const StatusCell: React.FC<StatusCellProps> = ({ status, onChange }) => {
   const getStatusColor = (status: Attendance["status"]) => {
     switch (status) {
       case "Present":
-        return "text-green-600 bg-green-100";
+        return "text-green-700 bg-green-100 hover:bg-green-200";
       case "Absent":
-        return "text-red-600 bg-red-100";
+        return "text-red-700 bg-red-100 hover:bg-red-200";
       default:
-        return "text-gray-600 bg-gray-100";
+        return "text-gray-700 bg-gray-100 hover:bg-gray-200";
     }
   };
 
   return (
-    <div className="relative inline-block">
+    <div className="relative">
       <button
         type="button"
-        className={`font-medium px-3 py-2 rounded-md ${getStatusColor(status)} focus:outline-none focus:ring-2 focus:ring-[#4F7CFF] text-sm`}
+        className={`font-medium px-4 py-2 rounded-lg ${getStatusColor(status)} focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {status}
+        {status || "Pending"}
       </button>
       {isOpen && (
-        <div className="absolute z-20 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg">
+        <div className="absolute z-20 mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-xl">
           {statusOptions.map((option) => (
             <div
               key={option}
-              className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-50 ${getStatusColor(option).split(" ")[0]}`}
+              className={`px-4 py-2 text-sm cursor-pointer ${getStatusColor(option)} transition-colors`}
               onClick={() => {
                 onChange(option);
                 setIsOpen(false);
@@ -77,14 +79,16 @@ const TrackingAttendancePage: React.FC = () => {
   const navigate = useNavigate();
   const today = new Date().toISOString().split("T")[0];
 
+  const [activeTab, setActiveTab] = useState<"check" | "create">("check");
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>(today);
   const [selectedOrganizer, setSelectedOrganizer] = useState<string>("");
   const [dateError, setDateError] = useState<string>("");
   const [staffList, setStaffList] = useState<User[]>([]);
 
+  // Fetch staff list on component mount
   useEffect(() => {
     const fetchStaff = async () => {
       try {
@@ -95,67 +99,98 @@ const TrackingAttendancePage: React.FC = () => {
           toast.error("Invalid staff data format received.");
         }
       } catch (error: any) {
-        toast.error("Error fetching staff data: " + error.message);
+        toast.error(`Error fetching staff data: ${error.message}`);
       }
     };
 
     fetchStaff();
   }, []);
 
-  const getAttendanceData = useCallback(async () => {
-    if (!selectedDate || !selectedOrganizer) return;
+  // Fetch attendance data with null status filter for "check" tab
+  const getAttendanceData = useCallback(async (date: string, userId: string) => {
+    if (!date || !userId) {
+      toast.error("Please select both a date and an organizer.");
+      return;
+    }
 
     setLoading(true);
     try {
-      const data = await fetchAttendanceData({
-        selectedDate,
-        userId: selectedOrganizer,
-      });
-
+      const data = await fetchAttendanceData({ selectedDate: date, userId });
       if (Array.isArray(data)) {
-        setAttendanceRecords(data);
+        // Filter for null status only when in "check" tab
+        const filteredData = activeTab === "check" ? data.filter((record: Attendance) => record.status === null) : data;
+        setAttendanceRecords(filteredData);
       } else {
         toast.error("Invalid attendance data format received.");
       }
-    } catch (error) {
-      toast.error("Error fetching attendance data.");
+    } catch (error: any) {
+      toast.error(`Error fetching attendance data: ${error.message}`);
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, selectedOrganizer]);
+  }, [activeTab]);
 
-  useEffect(() => {
-    getAttendanceData();
-  }, [getAttendanceData]);
-
+  // Handle status change
   const handleStatusChange = async (id: string, newStatus: Attendance["status"]) => {
     try {
       const updatedRecord = await updateAttendanceStatus({ attendanceId: id, status: newStatus });
-      // updatedRecord should contain the latest status from backend
       setAttendanceRecords((prev) =>
         prev.map((record) =>
           record.id === id ? { ...record, status: updatedRecord.status } : record
         )
       );
-      console.log(updatedRecord.status,"----------------------------------")
       toast.success("Attendance status updated successfully.");
+      // Remove the record from the list if in "check" tab, as it no longer has null status
+      if (activeTab === "check") {
+        setAttendanceRecords((prev) => prev.filter((record) => record.id !== id));
+      }
     } catch (error: any) {
-      toast.error("Failed to update attendance status.");
+      toast.error(`Failed to update attendance status: ${error.message}`);
     }
   };
-  
 
+  // Handle date change with validation
   const handleDateChange = (date: string) => {
     const currentDate = new Date();
     const selected = new Date(date);
     if (selected > currentDate) {
       setDateError("Selected date cannot be in the future");
+      setSelectedDate(today);
     } else {
       setSelectedDate(date);
       setDateError("");
     }
   };
 
+  // Handle view list
+  const handleViewList = async () => {
+    await getAttendanceData(selectedDate, selectedOrganizer);
+  };
+
+  // Handle create checklist
+  const handleGenerateChecklist = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    if (!selectedDate || !selectedOrganizer) {
+      toast.error("Please select both a date and an organizer.");
+      return;
+    }
+  
+    try {
+      await createChildAttendanceChecklist({
+        attendance_date: selectedDate,
+        organizer_id: selectedOrganizer,
+      });
+      toast.success("Checklist created successfully.");
+      // Switch to Check Attendance tab and fetch data
+      setActiveTab("check");
+      await getAttendanceData(selectedDate, selectedOrganizer);
+    } catch (error: any) {
+      toast.error(`Error creating checklist: ${error.message}`);
+    }
+  };
+
+  // Filter attendance records based on search query
   const filteredAttendanceRecords = attendanceRecords.filter(
     (record) =>
       record.id.includes(searchQuery) ||
@@ -167,125 +202,294 @@ const TrackingAttendancePage: React.FC = () => {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 md:ml-[272px]">
-        <header className="flex items-center justify-between px-4 py-3 bg-white shadow-md">
-          <h1 className="text-2xl font-bold text-gray-900">Attendance Tracking</h1>
+        <header className="flex items-center justify-between px-6 py-4 bg-white shadow-lg sticky top-0 z-10">
+          <h1 className="text-3xl font-bold text-gray-900">Attendance Tracking</h1>
           <button
             onClick={() => navigate("/addchild")}
-            className="flex items-center gap-2 bg-[#4F7CFF] text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-sm md:text-base"
+            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg text-sm"
           >
             <PlusCircle className="w-5 h-5" />
             <span>Add New Child</span>
           </button>
         </header>
 
-        <main className="p-4 sm:p-6">
+        <main className="p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
-            <div className="md:hidden mb-4">
+            {/* Tab Navigation */}
+            <div className="flex border-b border-gray-200 mb-6">
               <button
-                onClick={() => navigate("/addchild")}
-                className="w-full flex items-center justify-center gap-2 bg-[#4F7CFF] text-white px-4 py-3 rounded-lg hover:bg-[#3B65E6] transition-shadow hover:shadow-md text-base"
+                className={`px-6 py-3 text-sm font-semibold ${activeTab === "check"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-600 hover:text-blue-600"
+                  }`}
+                onClick={() => setActiveTab("check")}
               >
-                <PlusCircle className="w-5 h-5" />
-                <span>Add New Child</span>
+                Check Attendance
+              </button>
+              <button
+                className={`px-6 py-3 text-sm font-semibold ${activeTab === "create"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-600 hover:text-blue-600"
+                  }`}
+                onClick={() => setActiveTab("create")}
+              >
+                Create Checklist
               </button>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="w-full md:w-40">
-                <label htmlFor="selected-date" className="block text-sm font-semibold text-gray-700 mb-1">
-                  Date
-                </label>
-                <input
-                  id="selected-date"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  max={today}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
-                />
-                {dateError && <p className="text-red-500 text-xs mt-1">{dateError}</p>}
-              </div>
+            {activeTab === "check" ? (
+              <div className="space-y-6">
+                {/* Search Input */}
+                <div className="relative w-full md:w-64">
+                  <label
+                    htmlFor="search-input"
+                    className="block text-sm font-semibold text-gray-800 mb-2"
+                  >
+                    Search
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="search-input"
+                      type="text"
+                      placeholder="Search by ID, Family ID, or Name"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm hover:border-gray-400 transition"
+                    />
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+                      size={18}
+                    />
+                  </div>
+                </div>
 
-              <div className="w-full md:w-64">
-                <label htmlFor="organizer-select" className="block text-sm font-semibold text-gray-700 mb-1">
-                  Organizer
-                </label>
-                <select
-                  id="organizer-select"
-                  value={selectedOrganizer}
-                  onChange={(e) => setSelectedOrganizer(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
-                >
-                  <option value="">Select Organizer</option>
-                  {staffList.map((staff) => (
-                    <option key={staff.id} value={staff.id}>
-                      {staff.username}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="relative w-full md:w-64">
-                <label htmlFor="search-input" className="block text-sm font-semibold text-gray-700 mb-1">
-                  Search
-                </label>
-                <input
-                  id="search-input"
-                  type="text"
-                  placeholder="ID, Family ID, or Name"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
-                />
-                <Search className="absolute left-3 top-9 transform -translate-y-1/2 text-gray-400" size={18} />
-              </div>
-            </div>
-
-            <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Full Name</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Created By</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Family ID</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Gender</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Age</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
+                {/* Mobile Card Layout */}
+                <div className="md:hidden space-y-4">
                   {loading ? (
-                    <tr>
-                      <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
-                        Loading...
-                      </td>
-                    </tr>
+                    <div className="text-center text-gray-500 py-8 text-sm">Loading...</div>
                   ) : filteredAttendanceRecords.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
-                        No attendance records found.
-                      </td>
-                    </tr>
+                    <div className="text-center text-gray-500 py-8 text-sm">No pending attendance records found.</div>
                   ) : (
                     filteredAttendanceRecords.map((record) => (
-                      <tr key={record.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-gray-900">{record.fullname}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{record.username}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{record.family_id || "-"}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{record.gender}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{record.age}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
+                      <div
+                        key={record.id}
+                        className="bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                      >
+                        <h3 className="text-lg font-semibold text-gray-900">{record.fullname}</h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Created By:</span> {record.username}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Family ID:</span> {record.family_id || "-"}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Gender:</span> {record.gender}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Age:</span> {record.age}
+                        </p>
+                        <div className="mt-4">
                           <StatusCell
                             status={record.status}
                             onChange={(newStatus) => handleStatusChange(record.id, newStatus)}
                           />
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))
                   )}
-                </tbody>
-              </table>
-            </div>
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden md:block bg-white rounded-xl shadow-lg overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Full Name</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created By</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Family ID</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Gender</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Age</th>
+                        
+    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Stutas</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {loading ? (
+                        <tr>
+                          <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
+                            Loading...
+                          </td>
+                        </tr>
+                      ) : filteredAttendanceRecords.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
+                            No pending attendance records found.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredAttendanceRecords.map((record) => (
+                          <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.fullname}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.username}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.family_id || "-"}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.gender}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.age}</td>
+                        
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              <StatusCell
+                                status={record.status}
+                                onChange={(newStatus) => handleStatusChange(record.id, newStatus)}
+                              />
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Create Attendance Checklist</h2>
+                <form onSubmit={handleGenerateChecklist} className="flex flex-col md:flex-row md:items-end gap-4 mb-8">
+                  {/* Date Picker */}
+                  <div className="w-full md:w-40">
+                    <label htmlFor="create-date" className="block text-sm font-semibold text-gray-800 mb-2">
+                      Date
+                    </label>
+                    <input
+                      id="create-date"
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => handleDateChange(e.target.value)}
+                      max={today}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm hover:border-gray-400 transition"
+                    />
+                    {dateError && <p className="text-red-500 text-xs mt-1">{dateError}</p>}
+                  </div>
+
+                  {/* Organizer Select */}
+                  <div className="w-full md:w-64">
+                    <label htmlFor="create-organizer" className="block text-sm font-semibold text-gray-800 mb-2">
+                      Organizer
+                    </label>
+                    <select
+                      id="create-organizer"
+                      value={selectedOrganizer}
+                      onChange={(e) => setSelectedOrganizer(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm hover:border-gray-400 transition"
+                    >
+                      <option value="">Select Organizer</option>
+                      {staffList.map((staff) => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.username}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                    <button
+                      type="button"
+                      onClick={handleViewList}
+                      className="w-full md:w-auto px-6 py-3 bg-green-600 text-white rounded-2xl text-sm font-semibold shadow-md hover:bg-green-700 hover:shadow-lg transition-all"
+                    >
+                      View List
+                    </button>
+                    <button
+                      type="submit"
+                      className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-2xl text-sm font-semibold shadow-md hover:bg-blue-700 hover:shadow-lg transition-all"
+                    >
+                      Generate Checklist
+                    </button>
+                  </div>
+                </form>
+
+                {/* Mobile Card Layout for Create Checklist */}
+                <div className="md:hidden space-y-4">
+                  {loading ? (
+                    <div className="text-center text-gray-500 py-8 text-sm">Loading...</div>
+                  ) : filteredAttendanceRecords.length === 0 ? (
+                    <div className="text-center text-gray-500 py-8 text-sm">No attendance records found.</div>
+                  ) : (
+                    filteredAttendanceRecords.map((record) => (
+                      <div
+                        key={record.id}
+                        className="bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                      >
+                        <h3 className="text-lg font-semibold text-gray-900">{record.fullname}</h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Created By:</span> {record.username}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Family ID:</span> {record.family_id || "-"}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Gender:</span> {record.gender}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Age:</span> {record.age}
+                        </p>
+                        <div className="mt-4">
+                          <StatusCell
+                            status={record.status}
+                            onChange={(newStatus) => handleStatusChange(record.id, newStatus)}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Desktop Table Layout for Create Checklist */}
+                <div className="hidden md:block bg-white rounded-xl shadow-lg overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Full Name</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Created By</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Family ID</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Gender</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Age</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {loading ? (
+                        <tr>
+                          <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
+                            Loading...
+                          </td>
+                        </tr>
+                      ) : filteredAttendanceRecords.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
+                            No attendance records found.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredAttendanceRecords.map((record) => (
+                          <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.fullname}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.username}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.family_id || "-"}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.gender}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.age}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              <StatusCell
+                                status={record.status}
+                                onChange={(newStatus) => handleStatusChange(record.id, newStatus)}
+                              />
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </div>
         </main>
       </div>
