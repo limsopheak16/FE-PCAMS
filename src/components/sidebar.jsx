@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/Pse-logo.webp";
+import { getUserProfile } from "../api/getUserProfile"; // Import the getUserProfile function
 import {
   Calendar,
   Users,
@@ -16,6 +17,45 @@ const SidebarMenu = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [userName, setUserName] = useState("Loading...");
+  const [userRole, setUserRole] = useState("Loading...");
+  const [, setError] = useState(null);
+
+  // Fetch user profile when component mounts
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const profile = await getUserProfile();
+      if (profile) {
+        setUserName(profile.username || profile.name || "Unknown User");
+        setUserRole(profile.role || "Unknown Role");
+
+        // Navigate to default path based on role after profile is loaded
+        const defaultPath = getDefaultPath(profile.role);
+        if (location.pathname === "/" || location.pathname === "") {
+          navigate(defaultPath);
+        }
+      } else {
+        setError("Failed to load user profile.");
+        setUserName("Unknown User");
+        setUserRole("Unknown Role");
+      }
+    };
+    fetchUserProfile();
+  }, [navigate, location.pathname]);
+
+  // Determine default path based on role
+  const getDefaultPath = (role) => {
+    switch (role.toLowerCase()) {
+      case "admin":
+        return "/camp";
+      case "coordinator":
+        return "/attendance";
+      case "monitor":
+        return "/attendance";
+      default:
+        return "/camp"; // Fallback to admin default if role is unknown
+    }
+  };
 
   const handleLogout = () => {
     console.log("Logging out...");
@@ -23,16 +63,6 @@ const SidebarMenu = () => {
     navigate("/login");
     setIsOpen(false);
   };
-
-  const menuItems = [
-    { icon: Calendar, label: "Camp", path: "/camp" },
-    { icon: Calendar, label: "Event Camp", path: "/eventcamp" },
-    { icon: Users, label: "Attendance", path: "/attendance" },
-    { icon: LayoutDashboard, label: "Coordinator Dashboard", path: "/dashboard" },
-    { icon: User, label: "Add User", path: "/user" },
-    { icon: Bell, label: "Notification", path: "/notification" },
-    { icon: LayoutDashboard, label: "Admin Dashboard", path: "/admindashboard" },
-  ];
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -45,6 +75,34 @@ const SidebarMenu = () => {
     navigate(path);
     setIsOpen(false);
   };
+
+  // Define all menu items
+  const allMenuItems = [
+    { icon: Calendar, label: "Camp", path: "/camp" },
+    { icon: Calendar, label: "Event Camp", path: "/eventcamp" },
+    { icon: Users, label: "Attendance", path: "/attendance" },
+    { icon: LayoutDashboard, label: "Coordinator Dashboard", path: "/dashboard" },
+    { icon: User, label: "Add User", path: "/user" },
+    { icon: Bell, label: "Notification", path: "/notification" },
+    { icon: LayoutDashboard, label: "Admin Dashboard", path: "/admindashboard" },
+  ];
+
+  // Filter menu items based on role
+  const menuItems = (() => {
+    switch (userRole.toLowerCase()) {
+      case "admin":
+        return allMenuItems;
+      case "coordinator":
+        return allMenuItems.filter(
+          (item) =>
+            item.path === "/attendance" || item.path === "/dashboard"
+        );
+      case "monitor":
+        return allMenuItems.filter((item) => item.path === "/attendance");
+      default:
+        return allMenuItems; // Fallback to admin view if role is unknown
+    }
+  })();
 
   return (
     <>
@@ -70,7 +128,6 @@ const SidebarMenu = () => {
             <div className="flex flex-col px-4 py-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
-                // Highlight "Event Camp" for /eventcamp, /eventcamp/, or /eventcampdetail/
                 const isActive =
                   item.path === "/eventcamp"
                     ? location.pathname === "/eventcamp" ||
@@ -107,10 +164,8 @@ const SidebarMenu = () => {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-medium text-base text-black">
-                    Seng Kimer
-                  </span>
-                  <span className="text-sm text-gray-500">Super Admin</span>
+                  <span className="font-medium text-base text-black">{userName}</span>
+                  <span className="text-sm text-gray-500">{userRole}</span>
                 </div>
               </div>
               {/* Logout in Mobile Menu */}
@@ -144,7 +199,6 @@ const SidebarMenu = () => {
         <nav className="p-5 flex-1 space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            // Highlight "Event Camp" for /eventcamp, /eventcamp/, or /eventcampdetail/
             const isActive =
               item.path === "/eventcamp"
                 ? location.pathname === "/eventcamp" ||
@@ -177,16 +231,14 @@ const SidebarMenu = () => {
           className="flex items-center gap-3 px-5 py-6 cursor-pointer hover:bg-white transition"
           onClick={goToProfile}
         >
-          <div className="w-[60px] h-[60px] rounded-full overflow-hidden">
-            <img
-              src={logo}
-              alt="User"
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <img
+            src={logo}
+            alt="User Avatar"
+            className="rounded-full w-12 h-12 object-cover"
+          />
           <div className="flex flex-col">
-            <span className="font-medium text-lg text-black">Seng Kimer</span>
-            <span className="text-sm text-gray-500">Super Admin</span>
+            <span className="font-medium text-lg text-black">{userName}</span>
+            <span className="text-sm text-gray-500">{userRole}</span>
           </div>
         </div>
 
