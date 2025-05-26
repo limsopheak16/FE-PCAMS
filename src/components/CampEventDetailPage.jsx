@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import Sidebar from "../components/sidebar";
-import { Calendar, Users, CheckCircle2 } from "lucide-react"; // Importing icons
+import { Calendar, Users, CheckCircle2, Trash2 } from "lucide-react"; // Added Trash2 icon for remove
 
 const CampEventDetailPage = () => {
   const { campEventId } = useParams(); // Get the camp event ID from the URL
@@ -14,7 +14,8 @@ const CampEventDetailPage = () => {
   const [error, setError] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false); // State for menu dropdown
   const [searchTerm, setSearchTerm] = useState(""); // State for search input
-  const [addOrganizerSuccess, setAddOrganizerSuccess] = useState(""); // New state for add organizer success message
+  const [addOrganizerSuccess, setAddOrganizerSuccess] = useState(""); // State for add organizer success message
+  const [removeOrganizerSuccess, setRemoveOrganizerSuccess] = useState(""); // State for remove organizer success message
 
   // Fetch camp event details and organizers
   useEffect(() => {
@@ -50,10 +51,9 @@ const CampEventDetailPage = () => {
           });
           console.log("Camp Event Organizers Response:", organizersResponse.data);
           if (organizersResponse.data && Array.isArray(organizersResponse.data)) {
-            // Fetch user details for each organizer including role
             const enrichedOrganizers = await Promise.all(
               organizersResponse.data
-                .filter((organizer) => organizer.camp_event_id === campEventId) // Ensure only organizers for this camp event
+                .filter((organizer) => organizer.camp_event_id === campEventId)
                 .map(async (organizer) => {
                   if (organizer.user_id) {
                     const userResponse = await axiosInstance.get(`/users/${organizer.user_id}`, {
@@ -91,7 +91,6 @@ const CampEventDetailPage = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.data && Array.isArray(response.data)) {
-          // Enrich organizers with role
           const enrichedOrganizers = response.data.map((organizer) => ({
             ...organizer,
             username: organizer.username || organizer.name || "Unknown User",
@@ -112,6 +111,19 @@ const CampEventDetailPage = () => {
   const handleAddOrganizer = async (userId) => {
     try {
       const token = localStorage.getItem("token");
+
+      // Check if the user is already assigned to any camp
+      const allOrganizersResponse = await axiosInstance.get(`/campeventorganizers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const allOrganizers = allOrganizersResponse.data || [];
+      const isUserAssigned = allOrganizers.some((organizer) => organizer.user_id === userId);
+      if (isUserAssigned) {
+        setAddOrganizerSuccess("This user is already assigned to another camp.");
+        setTimeout(() => setAddOrganizerSuccess(""), 3000); // Hide after 3 seconds
+        return;
+      }
+
       const response = await axiosInstance.post(
         `/campeventorganizers`,
         {
@@ -132,7 +144,7 @@ const CampEventDetailPage = () => {
         console.log("Updated Camp Event Organizers Response:", updatedResponse.data);
         const enrichedOrganizers = await Promise.all(
           updatedResponse.data
-            .filter((organizer) => organizer.camp_event_id === campEventId) // Ensure only organizers for this camp event
+            .filter((organizer) => organizer.camp_event_id === campEventId)
             .map(async (organizer) => {
               if (organizer.user_id) {
                 const userResponse = await axiosInstance.get(`/users/${organizer.user_id}`, {
@@ -157,6 +169,63 @@ const CampEventDetailPage = () => {
       setAddOrganizerSuccess("Error adding organizer.");
       setTimeout(() => setAddOrganizerSuccess(""), 3000); // Hide after 3 seconds
       console.error("Error adding organizer:", error);
+    }
+  };
+
+  // Function to remove organizer from camp event
+  const handleRemoveOrganizer = async (organizerId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axiosInstance.delete(`/campeventorganizers/${organizerId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.status === 200) {
+        setRemoveOrganizerSuccess("Organizer removed successfully!");
+        setTimeout(() => setRemoveOrganizerSuccess(""), 3000); // Hide after 3 seconds
+        // Re-fetch camp event organizers to update the list
+        const updatedResponse = await axiosInstance.get(`/campeventorganizers?camp_event_id=${campEventId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("Updated Camp Event Organizers Response:", updatedResponse.data);
+        const enrichedOrganizers = await Promise.all(
+          updatedResponse.data
+            .filter((organizer) => organizer.camp_event_id === campEventId)
+            .map(async (organizer) => {
+              if (organizer.user_id) {
+                const userResponse = await axiosInstance.get(`/users/${organizer.user_id}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                return {
+                  ...organizer,
+                  username: userResponse.data?.username || userResponse.data?.name || "Unknown User",
+                  role: userResponse.data?.role || "Unknown Role",
+                };
+              }
+              return { ...organizer, username: "Unknown User", role: "Unknown Role" };
+            })
+        );
+        setCampEventOrganizers(enrichedOrganizers);
+        // Re-fetch available organizers to ensure the removed organizer is back
+        const organizersResponse = await axiosInstance.get(`/users`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (organizersResponse.data && Array.isArray(organizersResponse.data)) {
+          const enrichedOrganizers = organizersResponse.data.map((organizer) => ({
+            ...organizer,
+            username: organizer.username || organizer.name || "Unknown User",
+            role: organizer.role || "Unknown Role",
+          }));
+          setOrganizers(enrichedOrganizers);
+        }
+      } else {
+        setRemoveOrganizerSuccess("Failed to remove organizer.");
+        setTimeout(() => setRemoveOrganizerSuccess(""), 3000); // Hide after 3 seconds
+        console.error("Failed to remove organizer:", response.data.message);
+      }
+    } catch (error) {
+      setRemoveOrganizerSuccess("Error removing organizer.");
+      setTimeout(() => setRemoveOrganizerSuccess(""), 3000); // Hide after 3 seconds
+      console.error("Error removing organizer:", error);
     }
   };
 
@@ -319,10 +388,21 @@ const CampEventDetailPage = () => {
                     <span className="text-gray-800">{organizer.username}</span>
                     <span className="text-gray-600 text-sm">{organizer.role}</span>
                   </div>
+                  <button
+                    onClick={() => handleRemoveOrganizer(organizer.id)}
+                    className="bg-red-400 hover:bg-red-500 text-white px-3 py-1 rounded flex items-center"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" /> Remove
+                  </button>
                 </div>
               ))
             ) : (
               <p className="text-gray-500">No organizers assigned to this camp event.</p>
+            )}
+            {removeOrganizerSuccess && (
+              <p className="mt-4 text-green-600 text-sm font-medium flex items-center">
+                <CheckCircle2 className="w-5 h-5 mr-2" /> {removeOrganizerSuccess}
+              </p>
             )}
           </div>
         </main>

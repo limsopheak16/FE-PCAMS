@@ -99,17 +99,18 @@ const FormAddUser = () => {
         <h1 className="text-2xl font-bold text-gray-900">Add New User</h1>
         <button
           onClick={handleBack}
-          className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 shadow-sm transition"
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
         >
           Back
         </button>
       </header>
+{/*Mobile  */}
 
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white shadow-md">
         <h1 className="text-xl font-bold text-gray-900">Add New User</h1>
         <button
           onClick={handleBack}
-          className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 shadow-sm transition"
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
         >
           Back
         </button>

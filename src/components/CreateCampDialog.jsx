@@ -81,7 +81,7 @@ function CreateCampForm() {
         <h1 className="text-2xl font-bold text-gray-900">Create New Camp</h1>
         <button
           onClick={() => navigate("/camp")}
-          className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 shadow-sm transition"        >
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"        >
           Back
         </button>
       </header>
