@@ -12,8 +12,8 @@ import {
   Filler,
 } from "chart.js";
 import SidebarMenu from "../components/sidebar";
+import { toast } from "react-toastify";
 import { fetchDataAdmin } from "../api/getforadmin";
-import { getCamps}from "../api/getcamp"
 
 ChartJS.register(
   CategoryScale,
@@ -27,64 +27,48 @@ ChartJS.register(
 );
 
 const DashboardAdmin = () => {
-  const [selectedCamp, setSelectedCamp] = useState("");
-  const [startDate, setStartDate] = useState("2025-05-01");
-  const [endDate, setEndDate] = useState("2025-05-26");
+  const [startDate, setStartDate] = useState(""); // Default to match Postman test
+  const [endDate, setEndDate] = useState(""); // Default to match Postman test
   const [dateError, setDateError] = useState("");
   const [pending, setPending] = useState(false);
-  const [attendance, setAttendance] = useState(null);
-  const [camps, setCamps] = useState([]);
-
-
-  // const [camps] = useState([
-  //   { id: "1", camp_name: "Winter Camp A" },
-  //   { id: "2", camp_name: "Winter Camp B" },
-  // ]);
 
   const [chartLabels, setChartLabels] = useState([]);
-  const [chartData, setChartData] = useState([]);
-
+  const [presentData, setPresentData] = useState([]);
+  const [absentData, setAbsentData] = useState([]);
   const [stats, setStats] = useState({
     totalCoordinators: 0,
     totalMonitors: 0,
     totalChildren: 0,
+    attendanceSummary: {
+      totalChildren: 0,
+      presentChildren: 0,
+      absentChildren: 0,
+    },
   });
 
   const chartRef = useRef(null);
+
+  // Fetch dashboard data when startDate or endDate changes
   useEffect(() => {
-    const fetchCamps = async () => {
-      const data = await getCamps();
-      if (data) {
-        setCamps(data);
-      } else {
-        toast.error("Failed to fetch camp data.");
-      }
-      setLoading(false);
-    };
+    if (!startDate || !endDate) return;
 
-    fetchCamps();
-  }, []);
-
-  // Fetch attendance data when selectedCamp, startDate, or endDate changes
-  useEffect(() => {
-    if (!selectedCamp || !startDate || !endDate) return;
-
-    // Validate dates
+    // Validate dates (only check if start date is after end date)
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const today = new Date();
     if (start > end) {
       setDateError("Start date cannot be after end date");
       return;
     }
-    if (end > today) {
-      setDateError("End date cannot be in the future");
-      return;
-    }
+    // Removed future date validation to match Postman
+    // if (end > today) {
+    //   setDateError("End date cannot be in the future");
+    //   return;
+    // }
     setDateError("");
 
     const fetchData = async () => {
       try {
+        console.log("Fetching data with params:", { startDate, endDate });
         const data = await fetchDataAdmin({
           startDate,
           endDate,
@@ -92,31 +76,64 @@ const DashboardAdmin = () => {
         });
 
         if (data) {
-          setAttendance(data);
-          // Assuming API returns { labels: [], data: [], stats: { totalCoordinators, totalMonitors, totalChildren } }
-          setChartLabels(data.labels || []);
-          setChartData(data.data || []);
-          setStats(
-            data.stats || {
-              totalCoordinators: 0,
-              totalMonitors: 0,
+          // Map the API response to the state
+          setStats({
+            totalCoordinators: data.totalCoordinators || 0,
+            totalMonitors: data.totalMonitors || 0,
+            totalChildren: data.totalChildren || 0,
+            attendanceSummary: {
+              totalChildren: data.attendanceSummary.totalChildren || 0,
+              presentChildren: data.attendanceSummary.presentChildren || 0,
+              absentChildren: data.attendanceSummary.absentChildren || 0,
+            },
+          });
+
+          // Set chart data for present vs absent children
+          const labels = [startDate, endDate];
+          const present = data.attendanceSummary.presentChildren || 0;
+          const absent = data.attendanceSummary.absentChildren || 0;
+          setChartLabels(labels);
+          setPresentData([present, present]);
+          setAbsentData([absent, absent]);
+
+          console.log("Fetched dashboard data:", data);
+        } else {
+          toast.error("Failed to fetch dashboard data");
+          setChartLabels([]);
+          setPresentData([]);
+          setAbsentData([]);
+          setStats({
+            totalCoordinators: 0,
+            totalMonitors: 0,
+            totalChildren: 0,
+            attendanceSummary: {
               totalChildren: 0,
-            }
-          );
-          console.log("Fetched attendance:", data);
+              presentChildren: 0,
+              absentChildren: 0,
+            },
+          });
         }
       } catch (error) {
-        console.error("Error fetching attendance data:", error);
-        setDateError("Failed to fetch attendance data");
+        console.error("Error fetching dashboard data:", error);
+        toast.error("Failed to fetch dashboard data");
+        setChartLabels([]);
+        setPresentData([]);
+        setAbsentData([]);
+        setStats({
+          totalCoordinators: 0,
+          totalMonitors: 0,
+          totalChildren: 0,
+          attendanceSummary: {
+            totalChildren: 0,
+            presentChildren: 0,
+            absentChildren: 0,
+          },
+        });
       }
     };
 
     fetchData();
-  }, [selectedCamp, startDate, endDate]);
-
-  const handleCampChange = (e) => {
-    setSelectedCamp(e.target.value);
-  };
+  }, [startDate, endDate]);
 
   const handleStartDateChange = (e) => {
     setStartDate(e.target.value);
@@ -126,36 +143,34 @@ const DashboardAdmin = () => {
     setEndDate(e.target.value);
   };
 
-  const getTodayDateString = () => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
+  // Removed unused getTodayDateString function to resolve the compile error
 
-  const today = getTodayDateString();
 
   const attendanceChartData = useMemo(() => {
     const chart = chartRef.current;
-    let gradient = null;
+    let gradientPresent = null;
+    let gradientAbsent = null;
 
     if (chart && chart.ctx && chart.chartArea) {
       const ctx = chart.ctx;
       const chartArea = chart.chartArea;
-      gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-      gradient.addColorStop(0, "rgba(79, 124, 255, 0.8)");
-      gradient.addColorStop(1, "rgba(79, 124, 255, 0.1)");
+      gradientPresent = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      gradientPresent.addColorStop(0, "rgba(79, 124, 255, 0.8)");
+      gradientPresent.addColorStop(1, "rgba(79, 124, 255, 0.1)");
+
+      gradientAbsent = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      gradientAbsent.addColorStop(0, "rgba(255, 99, 132, 0.8)");
+      gradientAbsent.addColorStop(1, "rgba(255, 99, 132, 0.1)");
     }
 
     return {
       labels: chartLabels,
       datasets: [
         {
-          label: "Attendance",
-          data: chartData,
+          label: "Present Children",
+          data: presentData,
           borderColor: "#4F7CFF",
-          backgroundColor: gradient || "rgba(79, 124, 255, 0.2)",
+          backgroundColor: gradientPresent || "rgba(79, 124, 255, 0.2)",
           fill: true,
           tension: 0.4,
           pointBackgroundColor: "#4F7CFF",
@@ -163,9 +178,21 @@ const DashboardAdmin = () => {
           pointHoverBackgroundColor: "#fff",
           pointHoverBorderColor: "#4F7CFF",
         },
+        {
+          label: "Absent Children",
+          data: absentData,
+          borderColor: "#FF6384",
+          backgroundColor: gradientAbsent || "rgba(255, 99, 132, 0.2)",
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: "#FF6384",
+          pointBorderColor: "#fff",
+          pointHoverBackgroundColor: "#fff",
+          pointHoverBorderColor: "#FF6384",
+        },
       ],
     };
-  }, [chartLabels, chartData]);
+  }, [chartLabels, presentData, absentData]);
 
   const chartOptions = useMemo(
     () => ({
@@ -174,7 +201,7 @@ const DashboardAdmin = () => {
       scales: {
         y: {
           beginAtZero: true,
-          max: chartData.length > 0 ? Math.max(...chartData) + 5 : 50,
+          max: Math.max(...presentData, ...absentData, 50) + 5,
           ticks: {
             stepSize: 5,
             color: "#6B7280",
@@ -208,7 +235,7 @@ const DashboardAdmin = () => {
         },
       },
     }),
-    [chartData]
+    [presentData, absentData]
   );
 
   return (
@@ -225,24 +252,6 @@ const DashboardAdmin = () => {
             {/* Filters */}
             <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end justify-between">
-                {/* Camp Select */}
-                <div className="w-full sm:w-64">
-                  <label htmlFor="camp-select" className="block text-sm font-semibold text-gray-700 mb-1">
-                    Select Camp
-                  </label>
-                  <select
-                    id="camp-select"
-                    value={selectedCamp}
-                    onChange={handleCampChange}
-                    className="w-full bg-gray-100 rounded-md px-4 py-2"
-                  >
-                    <option value="">All Camps</option>
-                    {camps.map((camp) => (
-                      <option key={camp.id} value={camp.id}>{camp.camp_name}</option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* Start Date */}
                 <div className="w-full sm:w-40">
                   <label htmlFor="start-date" className="block text-sm font-semibold text-gray-700 mb-1">
@@ -253,7 +262,7 @@ const DashboardAdmin = () => {
                     type="date"
                     value={startDate}
                     onChange={handleStartDateChange}
-                    max={today}
+                    // Removed max={today} to allow future dates
                     className="w-full bg-gray-100 rounded-md px-4 py-2"
                   />
                 </div>
@@ -268,7 +277,7 @@ const DashboardAdmin = () => {
                     type="date"
                     value={endDate}
                     onChange={handleEndDateChange}
-                    max={today}
+                    // Removed max={today} to allow future dates
                     className="w-full bg-gray-100 rounded-md px-4 py-2"
                   />
                 </div>
@@ -277,7 +286,7 @@ const DashboardAdmin = () => {
             </div>
 
             {/* Loading Indicator */}
-            {pending && <p className="text-gray-500 text-center">Loading...</p>}
+            {pending && <p className="text-gray-500 text-center">Loading dashboard data...</p>}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -290,8 +299,20 @@ const DashboardAdmin = () => {
                 <h2 className="text-2xl font-bold text-green-600">{stats.totalMonitors}</h2>
               </div>
               <div className="bg-white p-4 shadow-sm border rounded-xl text-center">
-                <p className="text-sm text-gray-500">Children</p>
+                <p className="text-sm text-gray-500">Total Children (Unique)</p>
                 <h2 className="text-2xl font-bold text-orange-500">{stats.totalChildren}</h2>
+              </div>
+              <div className="bg-white p-4 shadow-sm border rounded-xl text-center">
+                <p className="text-sm text-gray-500">Total Attendance Records</p>
+                <h2 className="text-2xl font-bold text-purple-600">{stats.attendanceSummary.totalChildren}</h2>
+              </div>
+              <div className="bg-white p-4 shadow-sm border rounded-xl text-center">
+                <p className="text-sm text-gray-500">Present Children</p>
+                <h2 className="text-2xl font-bold text-green-600">{stats.attendanceSummary.presentChildren}</h2>
+              </div>
+              <div className="bg-white p-4 shadow-sm border rounded-xl text-center">
+                <p className="text-sm text-gray-500">Absent Children</p>
+                <h2 className="text-2xl font-bold text-red-600">{stats.attendanceSummary.absentChildren}</h2>
               </div>
             </div>
 
