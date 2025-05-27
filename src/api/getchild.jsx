@@ -4,7 +4,7 @@ export const getChild = async () => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await axiosInstance.get("/childattendances", {
+    const response = await axiosInstance.get("/api/childattendances", {
       headers: {
         Authorization: `Bearer ${token}`, 
       },

@@ -9,7 +9,7 @@ export const fetchAttendanceData = async ({ selectedDate, userId }) => {
 
   try {
     // Call backend with date and user_id query params
-    const res = await axiosInstance.get('/childattendances/attendance', {
+    const res = await axiosInstance.get('/api/childattendances/attendance', {
       params: {
         date: selectedDate,
         user_id: userId,

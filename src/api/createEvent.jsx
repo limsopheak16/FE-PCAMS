@@ -4,7 +4,7 @@ export const createEvent = async (eventData) => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await axiosInstance.post("/events", eventData, {
+    const response = await axiosInstance.post("/api/events", eventData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

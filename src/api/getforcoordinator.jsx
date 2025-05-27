@@ -6,7 +6,7 @@ export const fetchAttendanceData = async ({ Date, setPending }) => {
     setPending(true);
   
     try {
-      const res = await axiosInstance.get('/dashboard/coordinator', {
+      const res = await axiosInstance.get('/api/dashboard/coordinator', {
         params: { Date },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

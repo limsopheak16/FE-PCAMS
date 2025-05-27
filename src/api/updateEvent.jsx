@@ -5,7 +5,7 @@ export const updateEvent = async (id, eventData) => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await axiosInstance.put(`/events/${id}`, eventData, {
+    const response = await axiosInstance.put(`/api/events/${id}`, eventData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

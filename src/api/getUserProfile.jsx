@@ -8,7 +8,7 @@ export const getUserProfile = async () => {
     if (!token || !userId) throw new Error("Token or User ID not found");
     
 
-    const response = await axiosInstance.get(`/users/${userId}`, {
+    const response = await axiosInstance.get(`/api/users/${userId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

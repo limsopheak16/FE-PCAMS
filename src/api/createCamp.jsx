@@ -4,7 +4,7 @@ export const createCamp = async (campData, navigate) => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await axiosInstance.post("/camps", campData, {
+    const response = await axiosInstance.post("/api/camps", campData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

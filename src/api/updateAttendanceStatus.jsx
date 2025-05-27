@@ -3,7 +3,7 @@ import axiosInstance from "./axiosInstance";
 export const updateAttendanceStatus = async ({ attendanceId, status}) => {
   try {
     const response = await axiosInstance.patch(
-      `/childattendances/${attendanceId}`,
+      `/api/childattendances/${attendanceId}`,
       { status }
     );
     console.log("=========================",response.data.data)

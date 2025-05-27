@@ -4,7 +4,7 @@ export const createUser = async (userData, navigate) => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await axiosInstance.post("/users", userData, {
+    const response = await axiosInstance.post("/api/users", userData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

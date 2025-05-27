@@ -4,7 +4,7 @@ export const updateUser = async (userId, updatedData) => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await axiosInstance.put(`/users/${userId}`, updatedData, {
+    const response = await axiosInstance.put(`/api/users/${userId}`, updatedData, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

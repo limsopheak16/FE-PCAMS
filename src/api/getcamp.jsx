@@ -4,7 +4,7 @@ export const getCamps = async () => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await axiosInstance.get("/camps", {
+    const response = await axiosInstance.get("/api/camps", {
       headers: {
         Authorization: `Bearer ${token}`, 
       },

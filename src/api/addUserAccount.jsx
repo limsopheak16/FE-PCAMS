@@ -1,4 +1,5 @@
-import axios from "axios";
+import axiosInstance from "./axiosInstance";
+
 import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:3000/api";
@@ -7,7 +8,7 @@ const addUserAccount = async (userData, navigate) => {
   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNmE0YzJkLTMwMDEtNDZlYi1iNmQxLTJmMDcxYmJhNmI2NSIsInJvbGVfaWQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC0xMjM0NTY3ODkwYWIiLCJpYXQiOjE3NDc3MjgzMjgsImV4cCI6MTc0NzczOTEyOH0.8IXIcqAHP09A-8oKE_JaAiRbFBxXaF-P6NFBS2Zidac";
 
   try {
-    const response = await axios.post(`${API_URL}/users`, userData, {
+    const response = await axiosInstance.post(`/api/users`, userData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

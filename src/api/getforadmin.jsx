@@ -6,7 +6,7 @@ export const fetchDataAdmin = async ({ startDate, endDate, setPending }) => {
   setPending(true);
 
   try {
-    const res = await axiosInstance.get('/dashboard/admin', {
+    const res = await axiosInstance.get('/api/dashboard/admin', {
       params: { 
         startDate, 
         endDate,

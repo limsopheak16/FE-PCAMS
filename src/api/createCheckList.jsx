@@ -4,7 +4,7 @@ export const createChildAttendanceChecklist = async (data) => {
   try {
     const token = localStorage.getItem('token');
 
-    const response = await axiosInstance.post('/childattendances/checklist', data, {
+    const response = await axiosInstance.post('/api/childattendances/checklist', data, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
