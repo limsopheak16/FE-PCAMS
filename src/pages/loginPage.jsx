@@ -3,6 +3,9 @@ import axiosInstance from "../api/axiosInstance"; // Make sure this path is corr
 import loginImg from "../assets/login.jpg";
 import { useNavigate } from "react-router-dom";
 
+
+// console.log("==========",process.env.VITE_BASE_URL);
+console.log("++++++++++",import.meta.env.VITE_BASE_URL);
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -10,7 +13,6 @@ const LoginPage = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const navigate = useNavigate();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("handleSubmit triggered");
