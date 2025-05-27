@@ -8,6 +8,7 @@ export const fetchAttendanceData = async ({ selectedDate, userId }) => {
   }
 
   try {
+    // Call backend with date and user_id query params
     const res = await axiosInstance.get('/childattendances/attendance', {
       params: {
         date: selectedDate,
@@ -15,8 +16,9 @@ export const fetchAttendanceData = async ({ selectedDate, userId }) => {
       },
     });
  
-    console.log("==============",res)
-    return res.data.data; // assuming API returns an array of attendance records
+    console.log("Attendance chcecklist:", res.data.data);
+    // Return the attendance records array (filtered for status IS NULL on backend)
+    return res.data.data;
   } catch (error) {
     console.error("Error fetching attendance data:", error);
     throw error;
