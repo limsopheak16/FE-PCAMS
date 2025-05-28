@@ -125,24 +125,30 @@ const TrackingAttendancePage: React.FC = () => {
     fetchStaff();
   }, []);
 
-  // Fetch child data on component mount
   useEffect(() => {
     const fetchChild = async () => {
       try {
         const data = await getChild();
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
         if (Array.isArray(data)) {
-          setChild(data.map((child) => ({
-            ...child,
-            attendance_date: formatDateToCambodia(child.attendance_date || today),
-          })));
+          const filteredData = data
+            .filter((child) => {
+              const attendanceDate = child.attendance_date ? new Date(child.attendance_date).toISOString().split('T')[0] : today;
+              return attendanceDate === today;
+            })
+            .map((child) => ({
+              ...child,
+              attendance_date: formatDateToCambodia(child.attendance_date || today),
+            }));
+          setChild(filteredData);
         } else {
           toast.error("Invalid child data format received.");
         }
-      } catch (error: any) {
+      } catch (error) {
         toast.error(`Error fetching child data: ${error.message}`);
       }
     };
-
+  
     fetchChild();
   }, []);
 

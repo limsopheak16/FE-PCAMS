@@ -21,7 +21,7 @@ const LoginPage = () => {
     setSuccessMsg("");
 
     try {
-      const response = await axiosInstance.post("/auth/login", { email, password });
+      const response = await axiosInstance.post("/api/auth/login", { email, password });
       console.log("Response status:", response.status);
       console.log("Response data:", response.data.data.token);
 
