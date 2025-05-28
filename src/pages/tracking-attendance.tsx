@@ -131,10 +131,12 @@ const TrackingAttendancePage: React.FC = () => {
       try {
         const data = await getChild();
         if (Array.isArray(data)) {
-          setChild(data.map((child) => ({
-            ...child,
-            attendance_date: formatDateToCambodia(child.attendance_date || today),
-          })));
+          setChild(
+            data.map((child) => ({
+              ...child,
+              attendance_date: formatDateToCambodia(child.attendance_date || today),
+            }))
+          );
         } else {
           toast.error("Invalid child data format received.");
         }
@@ -142,9 +144,10 @@ const TrackingAttendancePage: React.FC = () => {
         toast.error(`Error fetching child data: ${error.message}`);
       }
     };
-
+  
     fetchChild();
   }, []);
+  
 
   // Fetch attendance data
   const getAttendanceData = useCallback(async (date: string, userId: string) => {

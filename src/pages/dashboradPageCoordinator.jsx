@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SidebarMenu from "../components/sidebar";
-import { fetchAttendanceData } from "../api/getforcoordinator";
+import { fetchCoordinator } from "../api/getforcoordinator";
 
 const DashboardCoordinator = () => {
   const [selectedDate, setSelectedDate] = useState("");
@@ -13,17 +13,15 @@ const DashboardCoordinator = () => {
     setSelectedDate(today);
   }, []);
 
-  // Fetch attendance data when selectedDate changes
   useEffect(() => {
     if (!selectedDate) return;
-
+  
     const fetchData = async () => {
       try {
-        const data = await fetchAttendanceData({
+        const data = await fetchCoordinator({
           Date: selectedDate,
-          // Removed 'setPending' as 'pending' state is unused
         });
-
+  
         if (data) {
           setAttendance(data);
           console.log("Fetched attendance:", data);
@@ -32,7 +30,7 @@ const DashboardCoordinator = () => {
         console.error("Error fetching attendance data:", error);
       }
     };
-
+  
     fetchData();
   }, [selectedDate]);
 
