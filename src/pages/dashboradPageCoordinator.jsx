@@ -5,7 +5,7 @@ import { fetchAttendanceData } from "../api/getforcoordinator";
 const DashboardCoordinator = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [attendance, setAttendance] = useState({});
-  const [pending, setPending] = useState(false);
+  // Removed unused 'pending' state
 
   // Initialize default date (today)
   useEffect(() => {
@@ -21,7 +21,7 @@ const DashboardCoordinator = () => {
       try {
         const data = await fetchAttendanceData({
           Date: selectedDate,
-          setPending,
+          // Removed 'setPending' as 'pending' state is unused
         });
 
         if (data) {
