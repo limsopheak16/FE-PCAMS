@@ -5,7 +5,7 @@ import DashboardCoordinator from "./pages/dashboradPageCoordinator";
 import TrackingAttendancePage from "./pages/tracking-attendance";
 import LoginPage from "./pages/loginPage";
 import DashboardAdmin from "./pages/deshboradPageAdmin";
-import Notification from "./pages/notificationPage";
+// import Notification from "./pages/notificationPage";
 import ProfilePage from "./pages/profilePage";
 import CreateChildPage from "./pages/createChildrenPage";
 import CreateCampPage from "./pages/createCampPage";
@@ -85,14 +85,14 @@ const App = () => {
           </ProtectedRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/notification"
         element={
           <ProtectedRoute>
             <Notification />
           </ProtectedRoute>
         }
-      />
+      /> */}
       <Route
         path="/adduser"
         element={
