@@ -125,30 +125,24 @@ const TrackingAttendancePage: React.FC = () => {
     fetchStaff();
   }, []);
 
+  // Fetch child data on component mount
   useEffect(() => {
     const fetchChild = async () => {
       try {
         const data = await getChild();
-        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
         if (Array.isArray(data)) {
-          const filteredData = data
-            .filter((child) => {
-              const attendanceDate = child.attendance_date ? new Date(child.attendance_date).toISOString().split('T')[0] : today;
-              return attendanceDate === today;
-            })
-            .map((child) => ({
-              ...child,
-              attendance_date: formatDateToCambodia(child.attendance_date || today),
-            }));
-          setChild(filteredData);
+          setChild(data.map((child) => ({
+            ...child,
+            attendance_date: formatDateToCambodia(child.attendance_date || today),
+          })));
         } else {
           toast.error("Invalid child data format received.");
         }
-      } catch (error) {
+      } catch (error: any) {
         toast.error(`Error fetching child data: ${error.message}`);
       }
     };
-  
+
     fetchChild();
   }, []);
 
@@ -216,43 +210,59 @@ const TrackingAttendancePage: React.FC = () => {
     await getAttendanceData(selectedDate, selectedOrganizer);
   };
 
+  // Handle view today
+  const handleViewToday = async () => {
+    setSelectedDate(today); // Set date to today
+    if (selectedOrganizer) {
+      await getAttendanceData(today, selectedOrganizer); // Fetch data for today
+    } else {
+      toast.error("Please select an organizer.");
+    }
+  };
+
   // Handle create checklist and refresh child data
   const handleGenerateChecklist = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!selectedDate || !selectedOrganizer) {
       toast.error("Please select both a date and an organizer.");
       return;
     }
-
+  
     try {
       const result = await createChildAttendanceChecklist({
         attendance_date: selectedDate,
         organizer_id: selectedOrganizer,
       });
+  
       if (result.length === 0) {
         toast.warn("No new attendance records were created. Check if data exists for the selected date and organizer.");
       } else {
-        toast.success("Checklist created successfully with null status for new children.");
+        toast.success("Checklist created successfully.");
+        // Only fetch child data if the API response doesn’t include child data
+        if (!Array.isArray(result) || result.length === 0 || !result[0]?.id) {
+          const childData = await getChild();
+          if (Array.isArray(childData)) {
+            setAttendanceRecords(
+              childData.map((child) => ({
+                ...child,
+                attendance_date: formatDateToCambodia(child.attendance_date || selectedDate),
+              }))
+            );
+          } else {
+            toast.error("Invalid child data format received.");
+          }
+        } else {
+          // Use result if it contains child data
+          setChild(
+            result.map((child) => ({
+              ...child,
+              attendance_date: formatDateToCambodia(child.attendance_date || selectedDate),
+            }))
+          );
+        }
       }
-
-      const childData = await getChild();
-
-      if (Array.isArray(childData)) {
-        // Filter children with attendance status null
-        const filteredChildren = childData.filter(child => child.status === null);
-      
-        // Map to format the attendance_date
-        const formattedChildren = filteredChildren.map(child => ({
-          ...child,
-          attendance_date: formatDateToCambodia(child.attendance_date || selectedDate),
-        }));
-      
-        setChild(formattedChildren);
-      } else {
-        toast.error("Invalid child data format received.");
-      }
-      
+  
       // Switch to check tab and fetch new attendance data
       setActiveTab("check");
       await getAttendanceData(selectedDate, selectedOrganizer);
@@ -320,63 +330,66 @@ const TrackingAttendancePage: React.FC = () => {
 
             {activeTab === "check" ? (
               <div className="space-y-6">
-                {/* Search Input */}
-                <div className="relative w-full md:w-64">
-                  <label
-                    htmlFor="search-input"
-                    className="block text-sm font-semibold text-gray-800 mb-2"
-                  >
-                    Search
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="search-input"
-                      type="text"
-                      placeholder="Search by ID, Family ID, or Name"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm hover:border-gray-400 transition"
-                    />
-                    <Search
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
-                      size={18}
-                    />
+                {/* Search and Filter Inputs */}
+                <div className="flex flex-col md:flex-row md:items-end gap-4 mb-8">
+                  <div className="w-full md:w-64">
+                    <label
+                      htmlFor="search-input"
+                      className="block text-sm font-semibold text-gray-800 mb-2"
+                    >
+                      Search
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="search-input"
+                        type="text"
+                        placeholder="Search by ID, Family ID, or Name"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-sm hover:border-gray-400 transition"
+                      />
+                      <Search
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+                        size={18}
+                      />
+                    </div>
                   </div>
+         
                 </div>
 
                 {/* Mobile Card Layout */}
                 <div className="md:hidden space-y-4">
                   {loading ? (
                     <div className="text-center text-gray-500 py-8 text-sm">Loading...</div>
-                  ) : filteredAttendanceRecords.length === 0 ? (
-                    <div className="text-center text-gray-500 py-8 text-sm">No attendance records found.</div>
+                  ) : filteredChildRecords.length === 0 ? (
+                    <div className="text-center text-gray-500 py-8 text-sm">No child records found.</div>
                   ) : (
-                    filteredAttendanceRecords.map((record) => (
+                    filteredChildRecords.map((child) => (
                       <div
-                        key={record.id}
+                        key={child.id}
                         className="bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                       >
-                        <h3 className="text-lg font-semibold text-gray-900">{record.fullname}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">{child.fullname}</h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Created By:</span> {record.username}
+                          <span className="font-medium">Created By:</span> {child.username}
                         </p>
                         <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Family ID:</span> {record.family_id || "-"}
+                          <span className="font-medium">Family ID:</span> {child.family_id || "-"}
                         </p>
                         <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Gender:</span> {record.gender}
+                          <span className="font-medium">Gender:</span> {child.gender}
                         </p>
                         <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Age:</span> {record.age}
+                          <span className="font-medium">Age:</span> {child.age}
                         </p>
                         <p className="text-sm text-gray-600 mt-1">
                           <span className="font-medium">Attendance Date:</span>{" "}
-                          {record.attendance_date}
+                          {child.attendance_date}
                         </p>
                         <div className="mt-4">
                           <StatusCell
-                            status={record.status}
-                            onChange={(newStatus) => handleStatusChange(record.id, newStatus)}
+                            status={child.status}
+                            onChange={(newStatus) => handleStatusChange(child.id, newStatus)}
                           />
                         </div>
                       </div>
@@ -405,14 +418,13 @@ const TrackingAttendancePage: React.FC = () => {
                             Loading...
                           </td>
                         </tr>
-                      ) : filteredAttendanceRecords.length === 0 ? (
+                      ) : filteredChildRecords.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="text-center text-gray-500 py-8 text-sm">
-                            No attendance records found.
+                            No child records found.
                           </td>
                         </tr>
-                      ) :
-                      (
+                      ) : (
                         filteredChildRecords.map((child) => (
                           <tr key={child.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-6 py-4 text-sm text-gray-900">{child.fullname}</td>
@@ -482,7 +494,7 @@ const TrackingAttendancePage: React.FC = () => {
                     </button>
                     <button
                       type="submit"
-                      className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-2xl text-sm font-semibold shadow-md hover:bg-blue-700 hover:shadow-lg transition-all"
+                      className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-2xl text-sm font-semibold shadow-bold hover:bg-blue-700 hover:shadow-lg transition-all"
                     >
                       Generate Checklist
                     </button>
@@ -556,7 +568,7 @@ const TrackingAttendancePage: React.FC = () => {
                             No child records found.
                           </td>
                         </tr>
-                      ) :  (
+                      ) : (
                         filteredAttendanceRecords.map((record) => (
                           <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-6 py-4 text-sm text-gray-900">{record.fullname}</td>
