@@ -5,7 +5,7 @@ import { updateEvent } from "../api/updateEvent";
 import Sidebar from "../components/sidebar";
 import { getCamps } from "../api/getcamp";
 import getCampEventsByEventId from "../api/getCampEventsByEventId";
-import { MapPin, Calendar, CheckCircle2 } from "lucide-react"; // Importing icons
+import { MapPin, Calendar, CheckCircle2 } from "lucide-react"; 
 
 const EventDetailPage = () => {
   const { id } = useParams(); // Get the event ID from the URL
@@ -93,7 +93,7 @@ const EventDetailPage = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/campevents", {
+      const response = await fetch("http://127.0.0.1:9008/api/campevents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

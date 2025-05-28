@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:3000/api", // Update to your actual base URL
+  baseURL: "http://127.0.0.1:9008/api", // Update to your actual base URL
 });
 
 axiosInstance.interceptors.request.use(
