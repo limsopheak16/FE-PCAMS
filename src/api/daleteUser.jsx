@@ -4,7 +4,7 @@ export const deleteUser = async (userId) => {
     try {
       const token = localStorage.getItem("token");
   
-      const response = await axiosInstance.delete(`/users/${userId}`, {
+      const response = await axiosInstance.delete(`/api/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

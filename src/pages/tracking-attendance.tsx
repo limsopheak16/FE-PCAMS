@@ -9,6 +9,7 @@ import { getUsers } from "../api/getUser";
 import { toast } from "react-toastify";
 import { updateAttendanceStatus } from "../api/updateAttendanceStatus";
 import { createChildAttendanceChecklist } from "../api/createCheckList";
+import { getChild } from "../api/getchild";
 
 interface Attendance {
   id: string;
@@ -18,18 +19,35 @@ interface Attendance {
   status: "Present" | "Absent" | null;
   family_id?: string;
   username: string;
-
+  attendance_date: string;
 }
 
 interface User {
   id: string;
+  fullname: string;
+  gender: string;
+  age: number;
+  status: "Present" | "Absent" | null;
+  family_id?: string;
   username: string;
+  attendance_date: string;
 }
 
 interface StatusCellProps {
   status: Attendance["status"];
   onChange: (status: Attendance["status"]) => void;
 }
+
+const formatDateToCambodia = (isoString: string): string => {
+  const date = new Date(isoString);
+  const options = { timeZone: "Asia/Phnom_Penh", year: "numeric", month: "2-digit", day: "2-digit" } as const;
+  const formatter = new Intl.DateTimeFormat("en-CA", options);
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((p) => p.type === "year")!.value;
+  const month = parts.find((p) => p.type === "month")!.value;
+  const day = parts.find((p) => p.type === "day")!.value;
+  return `${year}-${month}-${day}`;
+};
 
 const StatusCell: React.FC<StatusCellProps> = ({ status, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -87,6 +105,7 @@ const TrackingAttendancePage: React.FC = () => {
   const [selectedOrganizer, setSelectedOrganizer] = useState<string>("");
   const [dateError, setDateError] = useState<string>("");
   const [staffList, setStaffList] = useState<User[]>([]);
+  const [childs, setChild] = useState<User[]>([]);
 
   // Fetch staff list on component mount
   useEffect(() => {
@@ -106,7 +125,28 @@ const TrackingAttendancePage: React.FC = () => {
     fetchStaff();
   }, []);
 
-  // Fetch attendance data with null status filter for "check" tab
+  // Fetch child data on component mount
+  useEffect(() => {
+    const fetchChild = async () => {
+      try {
+        const data = await getChild();
+        if (Array.isArray(data)) {
+          setChild(data.map((child) => ({
+            ...child,
+            attendance_date: formatDateToCambodia(child.attendance_date || today),
+          })));
+        } else {
+          toast.error("Invalid child data format received.");
+        }
+      } catch (error: any) {
+        toast.error(`Error fetching child data: ${error.message}`);
+      }
+    };
+
+    fetchChild();
+  }, []);
+
+  // Fetch attendance data
   const getAttendanceData = useCallback(async (date: string, userId: string) => {
     if (!date || !userId) {
       toast.error("Please select both a date and an organizer.");
@@ -117,9 +157,11 @@ const TrackingAttendancePage: React.FC = () => {
     try {
       const data = await fetchAttendanceData({ selectedDate: date, userId });
       if (Array.isArray(data)) {
-        // Filter for null status only when in "check" tab
-        const filteredData = activeTab === "check" ? data.filter((record: Attendance) => record.status === null) : data;
-        setAttendanceRecords(filteredData);
+        const formattedData = data.map((record) => ({
+          ...record,
+          attendance_date: formatDateToCambodia(record.attendance_date),
+        }));
+        setAttendanceRecords(formattedData);
       } else {
         toast.error("Invalid attendance data format received.");
       }
@@ -128,7 +170,7 @@ const TrackingAttendancePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab]);
+  }, []);
 
   // Handle status change
   const handleStatusChange = async (id: string, newStatus: Attendance["status"]) => {
@@ -139,11 +181,12 @@ const TrackingAttendancePage: React.FC = () => {
           record.id === id ? { ...record, status: updatedRecord.status } : record
         )
       );
+      setChild((prev) =>
+        prev.map((child) =>
+          child.id === id ? { ...child, status: updatedRecord.status } : child
+        )
+      );
       toast.success("Attendance status updated successfully.");
-      // Remove the record from the list if in "check" tab, as it no longer has null status
-      if (activeTab === "check") {
-        setAttendanceRecords((prev) => prev.filter((record) => record.id !== id));
-      }
     } catch (error: any) {
       toast.error(`Failed to update attendance status: ${error.message}`);
     }
@@ -167,26 +210,48 @@ const TrackingAttendancePage: React.FC = () => {
     await getAttendanceData(selectedDate, selectedOrganizer);
   };
 
-  // Handle create checklist
+  // Handle create checklist and refresh child data
   const handleGenerateChecklist = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     if (!selectedDate || !selectedOrganizer) {
       toast.error("Please select both a date and an organizer.");
       return;
     }
-  
+
     try {
-      await createChildAttendanceChecklist({
+      const result = await createChildAttendanceChecklist({
         attendance_date: selectedDate,
         organizer_id: selectedOrganizer,
       });
-      toast.success("Checklist created successfully.");
-      // Switch to Check Attendance tab and fetch data
+      if (result.length === 0) {
+        toast.warn("No new attendance records were created. Check if data exists for the selected date and organizer.");
+      } else {
+        toast.success("Checklist created successfully with null status for new children.");
+      }
+
+      const childData = await getChild();
+
+      if (Array.isArray(childData)) {
+        // Filter children with attendance status null
+        const filteredChildren = childData.filter(child => child.status === null);
+      
+        // Map to format the attendance_date
+        const formattedChildren = filteredChildren.map(child => ({
+          ...child,
+          attendance_date: formatDateToCambodia(child.attendance_date || selectedDate),
+        }));
+      
+        setChild(formattedChildren);
+      } else {
+        toast.error("Invalid child data format received.");
+      }
+      
+      // Switch to check tab and fetch new attendance data
       setActiveTab("check");
       await getAttendanceData(selectedDate, selectedOrganizer);
     } catch (error: any) {
-      toast.error(`Error creating checklist: ${error.message}`);
+      toast.error(`Error creating checklist: ${error.response?.data?.error || error.message}`);
     }
   };
 
@@ -196,6 +261,14 @@ const TrackingAttendancePage: React.FC = () => {
       record.id.includes(searchQuery) ||
       record.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (record.family_id && record.family_id.includes(searchQuery))
+  );
+
+  // Filter child records based on search query
+  const filteredChildRecords = childs.filter(
+    (child) =>
+      child.id.includes(searchQuery) ||
+      child.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (child.family_id && child.family_id.includes(searchQuery))
   );
 
   return (
@@ -218,19 +291,21 @@ const TrackingAttendancePage: React.FC = () => {
             {/* Tab Navigation */}
             <div className="flex border-b border-gray-200 mb-6">
               <button
-                className={`px-6 py-3 text-sm font-semibold ${activeTab === "check"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-600 hover:text-blue-600"
-                  }`}
+                className={`px-6 py-3 text-sm font-semibold ${
+                  activeTab === "check"
+                    ? "border-b-2 border-blue-600 text-blue-600"
+                    : "text-gray-600 hover:text-blue-600"
+                }`}
                 onClick={() => setActiveTab("check")}
               >
                 Check Attendance
               </button>
               <button
-                className={`px-6 py-3 text-sm font-semibold ${activeTab === "create"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-600 hover:text-blue-600"
-                  }`}
+                className={`px-6 py-3 text-sm font-semibold ${
+                  activeTab === "create"
+                    ? "border-b-2 border-blue-600 text-blue-600"
+                    : "text-gray-600 hover:text-blue-600"
+                }`}
                 onClick={() => setActiveTab("create")}
               >
                 Create Checklist
@@ -268,7 +343,7 @@ const TrackingAttendancePage: React.FC = () => {
                   {loading ? (
                     <div className="text-center text-gray-500 py-8 text-sm">Loading...</div>
                   ) : filteredAttendanceRecords.length === 0 ? (
-                    <div className="text-center text-gray-500 py-8 text-sm">No pending attendance records found.</div>
+                    <div className="text-center text-gray-500 py-8 text-sm">No attendance records found.</div>
                   ) : (
                     filteredAttendanceRecords.map((record) => (
                       <div
@@ -287,6 +362,10 @@ const TrackingAttendancePage: React.FC = () => {
                         </p>
                         <p className="text-sm text-gray-600 mt-1">
                           <span className="font-medium">Age:</span> {record.age}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Attendance Date:</span>{" "}
+                          {record.attendance_date}
                         </p>
                         <div className="mt-4">
                           <StatusCell
@@ -309,36 +388,37 @@ const TrackingAttendancePage: React.FC = () => {
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Family ID</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Gender</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Age</th>
-                        
-    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Stutas</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Attendance Date</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {loading ? (
                         <tr>
-                          <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
+                          <td colSpan={7} className="text-center text-gray-500 py-8 text-sm">
                             Loading...
                           </td>
                         </tr>
                       ) : filteredAttendanceRecords.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
-                            No pending attendance records found.
+                          <td colSpan={7} className="text-center text-gray-500 py-8 text-sm">
+                            No attendance records found.
                           </td>
                         </tr>
-                      ) : (
-                        filteredAttendanceRecords.map((record) => (
-                          <tr key={record.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 text-sm text-gray-900">{record.fullname}</td>
-                            <td className="px-6 py-4 text-sm text-gray-900">{record.username}</td>
-                            <td className="px-6 py-4 text-sm text-gray-900">{record.family_id || "-"}</td>
-                            <td className="px-6 py-4 text-sm text-gray-900">{record.gender}</td>
-                            <td className="px-6 py-4 text-sm text-gray-900">{record.age}</td>
-                        
+                      ) :
+                      (
+                        filteredChildRecords.map((child) => (
+                          <tr key={child.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 text-sm text-gray-900">{child.fullname}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{child.username}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{child.family_id || "-"}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{child.gender}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{child.age}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{child.attendance_date}</td>
                             <td className="px-6 py-4 text-sm text-gray-900">
                               <StatusCell
-                                status={record.status}
-                                onChange={(newStatus) => handleStatusChange(record.id, newStatus)}
+                                status={child.status}
+                                onChange={(newStatus) => handleStatusChange(child.id, newStatus)}
                               />
                             </td>
                           </tr>
@@ -352,7 +432,6 @@ const TrackingAttendancePage: React.FC = () => {
               <>
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">Create Attendance Checklist</h2>
                 <form onSubmit={handleGenerateChecklist} className="flex flex-col md:flex-row md:items-end gap-4 mb-8">
-                  {/* Date Picker */}
                   <div className="w-full md:w-40">
                     <label htmlFor="create-date" className="block text-sm font-semibold text-gray-800 mb-2">
                       Date
@@ -368,7 +447,6 @@ const TrackingAttendancePage: React.FC = () => {
                     {dateError && <p className="text-red-500 text-xs mt-1">{dateError}</p>}
                   </div>
 
-                  {/* Organizer Select */}
                   <div className="w-full md:w-64">
                     <label htmlFor="create-organizer" className="block text-sm font-semibold text-gray-800 mb-2">
                       Organizer
@@ -388,7 +466,6 @@ const TrackingAttendancePage: React.FC = () => {
                     </select>
                   </div>
 
-                  {/* Buttons */}
                   <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                     <button
                       type="button"
@@ -410,31 +487,35 @@ const TrackingAttendancePage: React.FC = () => {
                 <div className="md:hidden space-y-4">
                   {loading ? (
                     <div className="text-center text-gray-500 py-8 text-sm">Loading...</div>
-                  ) : filteredAttendanceRecords.length === 0 ? (
-                    <div className="text-center text-gray-500 py-8 text-sm">No attendance records found.</div>
+                  ) : filteredChildRecords.length === 0 ? (
+                    <div className="text-center text-gray-500 py-8 text-sm">No child records found.</div>
                   ) : (
-                    filteredAttendanceRecords.map((record) => (
+                    filteredChildRecords.map((child) => (
                       <div
-                        key={record.id}
+                        key={child.id}
                         className="bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                       >
-                        <h3 className="text-lg font-semibold text-gray-900">{record.fullname}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">{child.fullname}</h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Created By:</span> {record.username}
+                          <span className="font-medium">Created By:</span> {child.username}
                         </p>
                         <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Family ID:</span> {record.family_id || "-"}
+                          <span className="font-medium">Family ID:</span> {child.family_id || "-"}
                         </p>
                         <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Gender:</span> {record.gender}
+                          <span className="font-medium">Gender:</span> {child.gender}
                         </p>
                         <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Age:</span> {record.age}
+                          <span className="font-medium">Age:</span> {child.age}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Attendance Date:</span>{" "}
+                          {child.attendance_date}
                         </p>
                         <div className="mt-4">
                           <StatusCell
-                            status={record.status}
-                            onChange={(newStatus) => handleStatusChange(record.id, newStatus)}
+                            status={child.status}
+                            onChange={(newStatus) => handleStatusChange(child.id, newStatus)}
                           />
                         </div>
                       </div>
@@ -452,23 +533,24 @@ const TrackingAttendancePage: React.FC = () => {
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Family ID</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Gender</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Age</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Attendance Date</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {loading ? (
                         <tr>
-                          <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
+                          <td colSpan={7} className="text-center text-gray-500 py-8 text-sm">
                             Loading...
                           </td>
                         </tr>
-                      ) : filteredAttendanceRecords.length === 0 ? (
+                      ) : filteredChildRecords.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="text-center text-gray-500 py-8 text-sm">
-                            No attendance records found.
+                          <td colSpan={7} className="text-center text-gray-500 py-8 text-sm">
+                            No child records found.
                           </td>
                         </tr>
-                      ) : (
+                      ) :  (
                         filteredAttendanceRecords.map((record) => (
                           <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-6 py-4 text-sm text-gray-900">{record.fullname}</td>
@@ -476,6 +558,7 @@ const TrackingAttendancePage: React.FC = () => {
                             <td className="px-6 py-4 text-sm text-gray-900">{record.family_id || "-"}</td>
                             <td className="px-6 py-4 text-sm text-gray-900">{record.gender}</td>
                             <td className="px-6 py-4 text-sm text-gray-900">{record.age}</td>
+                            <td className="px-6 py-4 text-sm text-gray-900">{record.attendance_date}</td>
                             <td className="px-6 py-4 text-sm text-gray-900">
                               <StatusCell
                                 status={record.status}

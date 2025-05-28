@@ -5,7 +5,7 @@ const getEventById = async (id) => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await axiosInstance.get(`/events/${id}`, {
+    const response = await axiosInstance.get(`/api/events/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
