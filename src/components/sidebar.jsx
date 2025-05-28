@@ -82,7 +82,7 @@ const SidebarMenu = () => {
     { icon: Calendar, label: "Event Camp", path: "/eventcamp" },
     { icon: Users, label: "Attendance", path: "/attendance" },
     { icon: LayoutDashboard, label: "Coordinator Dashboard", path: "/dashboard" },
-    { icon: User, label: "Add User", path: "/user" },
+    { icon: User, label: "User", path: "/user" },
     // { icon: Bell, label: "Notification", path: "/notification" },
     { icon: LayoutDashboard, label: "Admin Dashboard", path: "/admindashboard" },
   ];

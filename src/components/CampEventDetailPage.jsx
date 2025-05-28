@@ -24,7 +24,7 @@ const CampEventDetailPage = () => {
         const token = localStorage.getItem("token");
 
         // Fetch camp event details
-        const campEventResponse = await axiosInstance.get(`/campevents/${campEventId}`, {
+        const campEventResponse = await axiosInstance.get(`/api/campevents/${campEventId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("Camp Event Response:", campEventResponse.data);
@@ -33,7 +33,7 @@ const CampEventDetailPage = () => {
 
           // Fetch camp name using camp_id from the camp event
           if (campEventResponse.data.camp_id) {
-            const campResponse = await axiosInstance.get(`/camps/${campEventResponse.data.camp_id}`, {
+            const campResponse = await axiosInstance.get(`/api/camps/${campEventResponse.data.camp_id}`, {
               headers: { Authorization: `Bearer ${token}` },
             });
             if (campResponse.data && campResponse.data.camp_name) {
@@ -46,7 +46,7 @@ const CampEventDetailPage = () => {
 
         // Fetch camp event organizers
         const fetchCampEventOrganizers = async () => {
-          const organizersResponse = await axiosInstance.get(`/campeventorganizers?camp_event_id=${campEventId}`, {
+          const organizersResponse = await axiosInstance.get(`/api/campeventorganizers?camp_event_id=${campEventId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           console.log("Camp Event Organizers Response:", organizersResponse.data);
@@ -56,7 +56,7 @@ const CampEventDetailPage = () => {
                 .filter((organizer) => organizer.camp_event_id === campEventId)
                 .map(async (organizer) => {
                   if (organizer.user_id) {
-                    const userResponse = await axiosInstance.get(`/users/${organizer.user_id}`, {
+                    const userResponse = await axiosInstance.get(`/api/users/${organizer.user_id}`, {
                       headers: { Authorization: `Bearer ${token}` },
                     });
                     return {
@@ -87,7 +87,7 @@ const CampEventDetailPage = () => {
     const fetchOrganizers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axiosInstance.get(`/users`, {
+        const response = await axiosInstance.get(`/api/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.data && Array.isArray(response.data)) {
@@ -113,7 +113,7 @@ const CampEventDetailPage = () => {
       const token = localStorage.getItem("token");
 
       // Check if the user is already assigned to any camp
-      const allOrganizersResponse = await axiosInstance.get(`/campeventorganizers`, {
+      const allOrganizersResponse = await axiosInstance.get(`/api/campeventorganizers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const allOrganizers = allOrganizersResponse.data || [];
@@ -125,7 +125,7 @@ const CampEventDetailPage = () => {
       }
 
       const response = await axiosInstance.post(
-        `/campeventorganizers`,
+        `/api/campeventorganizers`,
         {
           user_id: userId,
           camp_event_id: campEventId,
@@ -138,7 +138,7 @@ const CampEventDetailPage = () => {
         setAddOrganizerSuccess("Organizer added successfully!");
         setTimeout(() => setAddOrganizerSuccess(""), 3000); // Hide after 3 seconds
         // Re-fetch camp event organizers to update the list
-        const updatedResponse = await axiosInstance.get(`/campeventorganizers?camp_event_id=${campEventId}`, {
+        const updatedResponse = await axiosInstance.get(`/api/campeventorganizers?camp_event_id=${campEventId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("Updated Camp Event Organizers Response:", updatedResponse.data);
@@ -147,7 +147,7 @@ const CampEventDetailPage = () => {
             .filter((organizer) => organizer.camp_event_id === campEventId)
             .map(async (organizer) => {
               if (organizer.user_id) {
-                const userResponse = await axiosInstance.get(`/users/${organizer.user_id}`, {
+                const userResponse = await axiosInstance.get(`/api/users/${organizer.user_id}`, {
                   headers: { Authorization: `Bearer ${token}` },
                 });
                 return {
@@ -176,14 +176,14 @@ const CampEventDetailPage = () => {
   const handleRemoveOrganizer = async (organizerId) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axiosInstance.delete(`/campeventorganizers/${organizerId}`, {
+      const response = await axiosInstance.delete(`/api/campeventorganizers/${organizerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.status === 200) {
         setRemoveOrganizerSuccess("Organizer removed successfully!");
         setTimeout(() => setRemoveOrganizerSuccess(""), 3000); // Hide after 3 seconds
         // Re-fetch camp event organizers to update the list
-        const updatedResponse = await axiosInstance.get(`/campeventorganizers?camp_event_id=${campEventId}`, {
+        const updatedResponse = await axiosInstance.get(`/api/campeventorganizers?camp_event_id=${campEventId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("Updated Camp Event Organizers Response:", updatedResponse.data);
@@ -192,7 +192,7 @@ const CampEventDetailPage = () => {
             .filter((organizer) => organizer.camp_event_id === campEventId)
             .map(async (organizer) => {
               if (organizer.user_id) {
-                const userResponse = await axiosInstance.get(`/users/${organizer.user_id}`, {
+                const userResponse = await axiosInstance.get(`/api/users/${organizer.user_id}`, {
                   headers: { Authorization: `Bearer ${token}` },
                 });
                 return {
@@ -206,7 +206,7 @@ const CampEventDetailPage = () => {
         );
         setCampEventOrganizers(enrichedOrganizers);
         // Re-fetch available organizers to ensure the removed organizer is back
-        const organizersResponse = await axiosInstance.get(`/users`, {
+        const organizersResponse = await axiosInstance.get(`/api/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (organizersResponse.data && Array.isArray(organizersResponse.data)) {
@@ -233,13 +233,13 @@ const CampEventDetailPage = () => {
   const handleRefresh = async () => {
     try {
       const token = localStorage.getItem("token");
-      const campEventResponse = await axiosInstance.get(`/campevents/${campEventId}`, {
+      const campEventResponse = await axiosInstance.get(`/api/campevents/${campEventId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (campEventResponse.data) {
         setCampEvent(campEventResponse.data);
         if (campEventResponse.data.camp_id) {
-          const campResponse = await axiosInstance.get(`/camps/${campEventResponse.data.camp_id}`, {
+          const campResponse = await axiosInstance.get(`/api/camps/${campEventResponse.data.camp_id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (campResponse.data && campResponse.data.camp_name) {
