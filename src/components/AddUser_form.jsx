@@ -9,6 +9,7 @@ const FormAddUser = () => {
     username: "",
     email: "",
     password: "",
+    nationality: "",
     role: "",
   });
 
@@ -16,6 +17,7 @@ const FormAddUser = () => {
     username: "",
     email: "",
     password: "",
+    nationality: "",
     role: "",
   });
 
@@ -78,12 +80,14 @@ const FormAddUser = () => {
       username: "",
       email: "",
       password: "",
+      nationality: "",
       role: "",
     });
     setErrors({
       username: "",
       email: "",
       password: "",
+      nationality: "",
       role: "",
     });
   };
@@ -176,6 +180,24 @@ const FormAddUser = () => {
                 <p className="text-red-500 text-sm mt-1">{errors.password}</p>
               )}
             </div>
+            {/* Nationality */}
+            <div className="mb-3">
+              <label className="block text-base font-semibold text-gray-700 mb-3">
+                Nationality
+              </label>
+              <input
+                type="text"
+                name="nationality"
+                placeholder="Enter nationality"
+                value={formData.nationality}
+                onChange={handleChange}
+                className="w-full px-5 py-4 border border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-[#4F7CFF]"
+              />
+              {errors.username && (
+                <p className="text-red-500 text-sm mt-1">{errors.nationality}</p>
+              )}
+            </div>
+
 
             {/* Role */}
             <div className="mb-8">
@@ -196,6 +218,7 @@ const FormAddUser = () => {
                 <p className="text-red-500 text-sm mt-1">{errors.role}</p>
               )}
             </div>
+
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
