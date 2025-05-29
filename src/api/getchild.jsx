@@ -3,9 +3,9 @@ import axiosInstance from "../api/axiosInstance";
 export const getChild = async () => {
   try {
     const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
 
-    const response = await axiosInstance.get(`/api/childattendances/${userId}`, {
+
+    const response = await axiosInstance.get(`/api/childattendances`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
