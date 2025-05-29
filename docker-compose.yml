@@ -7,3 +7,5 @@ services:
       - "127.0.0.1:3308:80"
     container_name: vite-app
     restart: unless-stopped
+    environment:
+      VITE_BASE_URL: ${VITE_BASE_URL}
