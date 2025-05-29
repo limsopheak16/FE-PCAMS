@@ -93,7 +93,7 @@ const EventDetailPage = () => {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:9008/api/campevents", {
+      const response = await fetch("http://localhost:3000/api/campevents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

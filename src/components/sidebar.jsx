@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/Pse-logo.webp";
-import { getUserProfile } from "../api/getUserProfile"; // Import the getUserProfile function
+import { getUserProfile } from "../api/getUserProfile";
 import {
   Calendar,
   Users,
   LogOut,
-  Bell,
   User,
   LayoutDashboard,
   MenuIcon,
@@ -19,15 +18,24 @@ const SidebarMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [userName, setUserName] = useState("Loading...");
   const [userRole, setUserRole] = useState("Loading...");
-  const [, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Fetch user profile when component mounts
+  // Fetch user profile and validate token
   useEffect(() => {
     const fetchUserProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("No authentication token found.");
+        navigate("/login");
+        return;
+      }
+
       const profile = await getUserProfile();
-      if (profile) {
+      if (profile && profile.username && profile.role) {
         setUserName(profile.username || profile.name || "Unknown User");
         setUserRole(profile.role || "Unknown Role");
+        setIsAuthenticated(true);
 
         // Navigate to default path based on role after profile is loaded
         const defaultPath = getDefaultPath(profile.role);
@@ -35,9 +43,11 @@ const SidebarMenu = () => {
           navigate(defaultPath);
         }
       } else {
-        setError("Failed to load user profile.");
+        setError("Failed to load user profile or invalid token.");
         setUserName("Unknown User");
         setUserRole("Unknown Role");
+        localStorage.removeItem("token");
+        navigate("/login");
       }
     };
     fetchUserProfile();
@@ -53,7 +63,7 @@ const SidebarMenu = () => {
       case "monitor":
         return "/attendance";
       default:
-        return "/camp"; // Fallback to admin default if role is unknown
+        return "/login"; // Redirect to login if role is unknown
     }
   };
 
@@ -81,28 +91,39 @@ const SidebarMenu = () => {
     { icon: Calendar, label: "Camp", path: "/camp" },
     { icon: Calendar, label: "Event Camp", path: "/eventcamp" },
     { icon: Users, label: "Attendance", path: "/attendance" },
-    { icon: LayoutDashboard, label: "Coordinator Dashboard", path: "/dashboard" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { icon: User, label: "User", path: "/user" },
-    // { icon: Bell, label: "Notification", path: "/notification" },
     { icon: LayoutDashboard, label: "Admin Dashboard", path: "/admindashboard" },
   ];
 
   // Filter menu items based on role
   const menuItems = (() => {
+    if (!isAuthenticated) return [];
+
     switch (userRole.toLowerCase()) {
       case "admin":
-        return allMenuItems;
+        return allMenuItems.filter(
+          (item) => item.path !== "/dashboard" // Exclude Coordinator Dashboard
+        );
       case "coordinator":
         return allMenuItems.filter(
-          (item) =>
-            item.path === "/attendance" || item.path === "/dashboard"
+          (item) => item.path === "/attendance" || item.path === "/dashboard"
         );
       case "monitor":
         return allMenuItems.filter((item) => item.path === "/attendance");
       default:
-        return allMenuItems; // Fallback to admin view if role is unknown
+        return [];
     }
   })();
+
+  // If not authenticated, show minimal UI or redirect
+  if (!isAuthenticated && error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -203,7 +224,7 @@ const SidebarMenu = () => {
               item.path === "/eventcamp"
                 ? location.pathname === "/eventcamp" ||
                   location.pathname.startsWith("/eventcamp/") ||
-                  location.pathname.startsWith("/campeventdetail/")
+                  location.pathname.startsWith("/eventcampdetail/")
                 : location.pathname === item.path;
 
             return (
